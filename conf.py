@@ -156,7 +156,7 @@ html_theme_options = {
 
 html_context = {
   'display_github': True,
-  'github_user': 'obonaventure',
+  'github_user': 'mptcp-apps',
   'github_repo': 'mptcp-doc',
   'github_version': 'main',
 }
