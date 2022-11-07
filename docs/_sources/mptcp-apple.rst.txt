@@ -53,13 +53,13 @@ The fourth ``sysctl`` variable, ``net.inet.mptcp.allow_aggregate`` probably cont
 Multipath TCP on MacOS Ventura
 ------------------------------
 
-.. todo: Get recent Mac
-
+.. todo: To be provided
+   
 
 Adding Multipath TCP support to existing applications
 -----------------------------------------------------
 
-Apple exposes some of the Multipath TCP features to applications written in Objective C using the `Network Framework <https://developer.apple.com/documentation/network/2976692-nw_connection_start?language=objc>`_. In particular, the `example <https://developer.apple.com/documentation/network/implementing_netcat_with_network_framework?language=objc>` showing how to implement a ``netcat``-like application would useful for application developers.
+Apple exposes some of the Multipath TCP features to applications written in Objective C using the `Network Framework <https://developer.apple.com/documentation/network/2976692-nw_connection_start?language=objc>`_. In particular, the `example <https://developer.apple.com/documentation/network/implementing_netcat_with_network_framework?language=objc>`_ showing how to implement a ``netcat``-like application would useful for application developers.
 
 
 

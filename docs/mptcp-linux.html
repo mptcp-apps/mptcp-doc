@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Multipath TCP on recent Linux kernels &mdash; Multipath TCP -- documentation 2022 documentation</title>
+  <title>Using Multipath TCP on recent Linux kernels &mdash; Multipath TCP -- documentation 2022 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
@@ -46,7 +46,7 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Multipath TCP on recent Linux kernels</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Using Multipath TCP on recent Linux kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#enabling-multipath-tcp">Enabling Multipath TCP</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#analyzing-the-output-of-ss">Analyzing the output of ss</a></li>
 </ul>
@@ -73,7 +73,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Multipath TCP on recent Linux kernels</li>
+      <li>Using Multipath TCP on recent Linux kernels</li>
       <li class="wy-breadcrumbs-aside">
               <a href="https://github.com/obonaventure/mptcp-doc/blob/mainmptcp-linux.rst" class="fa fa-github"> Edit on GitHub</a>
       </li>
@@ -83,8 +83,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="multipath-tcp-on-recent-linux-kernels">
-<h1>Multipath TCP on recent Linux kernels<a class="headerlink" href="#multipath-tcp-on-recent-linux-kernels" title="Permalink to this headline"></a></h1>
+  <section id="using-multipath-tcp-on-recent-linux-kernels">
+<h1>Using Multipath TCP on recent Linux kernels<a class="headerlink" href="#using-multipath-tcp-on-recent-linux-kernels" title="Permalink to this headline"></a></h1>
+<p>The first version of Multipath TCP on Linux was an off-tree patch intially developed by UCLouvain researchers <span id="id1">[<a class="reference internal" href="biblio.html#id8926" title="Christoph Paasch, Sébastien Barré, and others. Multipath TCP in the Linux kernel. Available from \url http://www.multipath-tcp.org.">12</a>]</span>. This implementation was initially the reference implementation of Multipath TCP. It influenced the design of the protocol as new features were always tested on this implementation.</p>
 <p>Starting with version 5.6, the official Linux kernel includes support for Multipath TCP. The set of features supported by this implementation has increased over time as shown by its <a class="reference external" href="https://github.com/multipath-tcp/mptcp_net-next/wiki">ChangeLog</a>.</p>
 <p>To avoid any interference with regular TCP, this implementation only creates a Multipath TCP connection if the application has created its <code class="docutils literal notranslate"><span class="pre">socket</span></code> using the <code class="docutils literal notranslate"><span class="pre">IPPROTO_MPTCP</span></code> protocol. Applications will probably be modified in the coming months and years to add specific support for Multipath TCP, but in the mean time, the Multipath TCP developers have created a work around to force legacy applications to use Multipath TCP with the <code class="docutils literal notranslate"><span class="pre">mptcpize</span></code> command which is bundled with the <a class="reference external" href="https://intel.github.io/mptcpd/">mptcpd</a> daemon. We use this solution in this section.</p>
 <p>To illustrate Multipath TCP, we use a very simple setup with a Linux client using Ubuntu 22 and a Linux server using Debian. The client uses Linux kernel version 5.15 while the server uses version 5.17. The server has a single network interface with an IPv4 and an IPv6 address. The client has both a Wi-Fi and an Ethernet interface. These two interfaces are connected to the same router that allocates IP addresses in the same subnet on both interfaces. The client has both an IPv4 and an IPv6 address.</p>

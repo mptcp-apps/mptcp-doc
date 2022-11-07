@@ -1,5 +1,7 @@
-Multipath TCP on recent Linux kernels
-=====================================
+Using Multipath TCP on recent Linux kernels
+===========================================
+
+The first version of Multipath TCP on Linux was an off-tree patch intially developed by UCLouvain researchers :cite:`mptcp-kernel`. This implementation was initially the reference implementation of Multipath TCP. It influenced the design of the protocol as new features were always tested on this implementation.
 
 Starting with version 5.6, the official Linux kernel includes support for Multipath TCP. The set of features supported by this implementation has increased over time as shown by its `ChangeLog <https://github.com/multipath-tcp/mptcp_net-next/wiki>`_.
 
