@@ -86,6 +86,144 @@
 
 
 
+\chapter{Use cases}
+\label{\detokenize{usecases:use-cases}}\label{\detokenize{usecases::doc}}
+\sphinxAtStartPar
+The transport layer is an important layer in the TCP/IP protocol stack since this is the first layer that controls the exchange of information between the communicating hosts. It enhances the service provided by the network layer in several ways. First, the transport layer allows to multiplex data exchanged by different applications running on a given pair of communicating hosts. Second, the transport layer improves the reliability of the network layer. A wide range of reliability mechanisms have been proposed and implemented in transport protocols. These include, e.g. the utilization of checksums or CRCs to detect transmission errors, various techniques to recover from packet losses or congestion control mechanism that enable the transport protocol to detect the rate at which a flow can be transmitted without causing congestion.
+\begin{figure}[htbp]\centering\capstart\begin{tikzpicture}[
+node distance = 0mm and 0mm,
+box/.style = {draw, text width=80mm, inner sep=2mm, align=center}
+              ]
+\node (phy) [box]                   {Physical Layer};
+\node (dl) [box, above = of phy]   {Data Link Layer};
+\node (net) [box, above = of dl]   {Network Layer};
+\node (transport) [box, above = of net]   {Transport Layer};
+\node (net) [box, above = of transport]   {Application Layer};
+\end{tikzpicture}\caption{The TCP/IP protocol stack}\label{\detokenize{usecases:id23}}\label{\detokenize{usecases:fig-layers}}\end{figure}
+\sphinxAtStartPar
+Transport protocols provide different types of services to the applications. The simplest one is the datagram service provided by UDP Postel {[}\hyperlink{cite.biblio:id704}{1}{]} that uses source and destination ports to provide multiplexing and uses a checksum to detect transmission errors.
+The real\sphinxhyphen{}time transport protocol (RTP) Schulzrinne \sphinxstyleemphasis{et al.} {[}\hyperlink{cite.biblio:id3471}{2}{]} provides services intended for real\sphinxhyphen{}time applications such as interactive audio and video. These services include type identification, sequence numbering, timestamping and monitoring using the companion RTCP protocol.
+The Datagram Congestion Control Protocol (DCCP) Kohler \sphinxstyleemphasis{et al.} {[}\hyperlink{cite.biblio:id4244}{3}{]} mainly adds congestion control capabilities for UDP or RTP sessions.
+The Transmission Control Protocol (TCP) Postel {[}\hyperlink{cite.biblio:id729}{4}{]} enables the applications to create connections that support a bidirectional and reliable bytestream. TCP also includes flow\sphinxhyphen{}control and congestion control to adapt the transmission rate to current capabilities of the network and the communicating hosts. Nowadays, applications often use Transport Layer Security (TLS) Rescorla {[}\hyperlink{cite.biblio:id8271}{5}{]} above TCP to secure the exchange of data. The Stream Control Transmission Protocol (SCTP) Stewart (Ed.) {[}\hyperlink{cite.biblio:id4847}{6}{]} brought the support for multiple streams and failover capabilities. QUIC Iyengar (Ed.) and Thomson (Ed.) {[}\hyperlink{cite.biblio:id8812}{7}{]} the most recent transport protocol standardized within the IETF provides reliably delivery, includes TLS, supports multiple streams and connection migration.
+
+\sphinxAtStartPar
+Before looking at how Multipath TCP Ford \sphinxstyleemphasis{et al.} {[}\hyperlink{cite.biblio:id6658}{8}{]} works in details, it is interesting to first analyze the different use cases where Multipath TCP is used. Some of these use cases have motivated the design of Multipath TCP. Others appeared after the design was complete. Other uses cases will likely appear in the coming years.
+
+\sphinxAtStartPar
+As explained in the previous section, with Multipath TCP, hosts can exchanged data over different paths. At a high level, a Multipath TCP implementation lies between an application that uses the socket layer to exchange data over a connection. With TCP, a client establishes a connection with a server. It then uses it to send and receive data reliably thanks to the retransmission, flow and congestion control mechanisms that are included inside TCP. This TCP connection is identified by using four fields that are present in each packet exchanged over the connection:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+client IP address
+
+\item {} 
+\sphinxAtStartPar
+server IP address
+
+\item {} 
+\sphinxAtStartPar
+client TCP port
+
+\item {} 
+\sphinxAtStartPar
+server TCP port
+
+\end{itemize}
+
+\sphinxAtStartPar
+All packets contain these four fields that are often called the four\sphinxhyphen{}tuple.
+
+\sphinxAtStartPar
+At a high\sphinxhyphen{}level, the main difference between TCP and Multipath TCP is that a Multipath TCP connection is in fact a group of one or more TCP connections. These different TCP connections are entirely managed by Multipath TCP and are transparent to the application. The application interacts through the socket layer as if there was a single underlying TCP connection. Multipath TCP manages the underlying TCP connections. More precisely, Multipath TCP includes two different algorithms to control the underlying connections:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+a path manager that decides when an underlying TCP connection should be created or terminated
+
+\item {} 
+\sphinxAtStartPar
+a packet scheduler that decides over which underlying connection each new data is transmitted
+
+\end{itemize}
+
+\sphinxAtStartPar
+The path manager and the packet scheduler play a key role in each use case as we will see shortly. To illustrate them, let us consider a very simple an naive application that runs on a dual\sphinxhyphen{}stack client and interacts with a dual\sphinxhyphen{}stack server. There are two “paths” that the client and the server can use to exchange data : IPv4 and IPv6. Although both the client and the server are attached using a single link to the network, their end\sphinxhyphen{}to\sphinxhyphen{}end paths might differ through the network and pass through different intermediate routers.
+
+\sphinxAtStartPar
+When web browsers run on dual\sphinxhyphen{}stack hosts, they usually rely on the Happy Eyeballs mechanism to select between IPv6 and IPv4. In a nutshell, they typically try first to initiate a TCP connection to the server using IPv6. If after some time, e.g. 50 msec, the connection is not established, the client also tries using IPv4. In the end, the first connection to be established is selected and used to exchanged data.
+
+\sphinxAtStartPar
+Multipath TCP would also use Happy Eyeballs, but once one connection has been established, say IPv6, the client and the server will exchange their IPv4 addresses over the Multipath TCP connection. A simple path manager running on the client would then establish a second TCP connection using IPv4. This new TCP connection will be part of the Multipath TCP connection that was established over IPv6. The client and the server can now use two different TCP connections to exchange data: a first connection that uses IPv6 and a second connection that uses IPv4. If these connections have similar performance, a simple packet scheduler such as round\sphinxhyphen{}robin can be used to distribute the data over them. Such a scheduler alternatively sends data over the IPv4 and the IPv6 connections.
+
+
+\section{Improving resilience}
+\label{\detokenize{usecases:improving-resilience}}
+\sphinxAtStartPar
+One of the first large scale deployment of Multipath TCP was done by Apple.
+Shortly after the publication of the Multipath TCP specification {[}\hyperlink{cite.biblio:id6658}{8}{]}, Apple launched iOS13. This new version added Multipath TCP support for the Siri application. Siri is Apple’s voice assistant. Siri enables users to speak to their phone. In a nutshell, Siri detects that the user is talking to it using a special word, then it simply records the sound and sends it to a server managed by Apple over HTTPS. The server analyzes the received
+voice samples, extracts the command and return a response to the smartphone. Initially, this service was running over regular TCP, but Apple noticed that
+when users move, their smartphones sometimes switch from Wi\sphinxhyphen{}Fi to cellular or the opposite. These handovers were a nightmare from a user experience viewpoint.
+
+\sphinxAtStartPar
+Consider a simple scenario where a user walks out of her home and asks Siri to show her the map to drive to a restaurant before entering her car. When the user
+leaves her home, her smartphone is connected to Wi\sphinxhyphen{}Fi and the voice samples are sent over the Wi\sphinxhyphen{}Fi network. Unfortunately, when the smartphone gets out of reach of the Wi\sphinxhyphen{}Fi access point and switches to the cellular network, this breaks the connection with the server. The smartphone can establish a new connection and send again the voice samples, but this delays the response from the server and the user gets annoyed.
+
+\sphinxAtStartPar
+By using Multipath TCP, Siri solves this annoying problem in an elegant manner. The initial connection with the Siri server is created over the Wi\sphinxhyphen{}Fi network. When the smartphone detects the loss of the Wi\sphinxhyphen{}Fi network, it switches to the cellular one and can immediately create a second TCP connection that joins the initial one. This second connection supplements the initial one. The Siri application running on the smartphone or on the server does not detect anything. Multipath TCP sent the voice samples initially over the Wi\sphinxhyphen{}Fi network and the last samples over the cellular one. The server responds using the cellular network. The advantage for the user is that the handover from Wi\sphinxhyphen{}Fi to cellular does not cause any delay. Siri provides the requested information as if the smartphone had always been attached to a single network. Thus Multipath TCP hides the handovers to the application.
+
+\sphinxAtStartPar
+Apple’s use case requires a specific path manager and a packet scheduler. Two path managers are possible depending on whether the smartphone can enable both cellular and Wi\sphinxhyphen{}Fi or only one radio interface at a time. If the smartphone can simultaneously activate both radio interfaces, then the path manager can create a backup connection over the cellular interface when the Wi\sphinxhyphen{}Fi interface is the primary one. This backup connection can be established shortly after the handshake on the Wi\sphinxhyphen{}Fi interface. This consumes some data one the cellular network, but this enables the smartphone to immediately send data over the cellular connection is the primary connection over the Wi\sphinxhyphen{}Fi interface fails.
+This path manager implements a \sphinxtitleref{make before break} approach to handovers. Another possibility is to use a \sphinxtitleref{break before make} approach. In this case, the cellular network is not used until the failure of the Wi\sphinxhyphen{}Fi network. The path manager detects the failure and immediately creates a connection over the cellular network.
+
+\sphinxAtStartPar
+Concerning the packet schedulers, let us first evaluate the round\sphinxhyphen{}robin scheduler that we discussed before. Clearly, such a packet scheduler would not make sense to support this application. If the smartphone does not move, it would send part of the data over the cellular and the Wi\sphinxhyphen{}Fi networks without any reason. When the user moves, it could continue to use a broken network. A better approach is to prioritize the network interfaces. If the connection over the Wi\sphinxhyphen{}Fi network is active, it should be used. The connection using the cellular network should only be used after the failure of the Wi\sphinxhyphen{}Fi connection. This works well for the data sent by the smartphone. The smartphone knows from its network cards when the cellular and Wi\sphinxhyphen{}Fi networks are active or not. However, on the server side, the situation is more difficult. Consider the case where the smartphone has created a backup connection over the cellular interface and a primary one over the Wi\sphinxhyphen{}Fi network. The smartphone has sent most of the data over the Wi\sphinxhyphen{}Fi interface and the server has returned all acknowledgments over this interface. Assume that the Wi\sphinxhyphen{}Fi network fails abruptly. At this time, the smartphone cannot anymore send information over the Wi\sphinxhyphen{}Fi connection, but the server is not aware of the problem. If the server needs to return a response, it will probably send it over the Wi\sphinxhyphen{}Fi connection because this is the connection that it has used until now. The corresponding packets will never reach the smartphone. They will need to be retransmitted by the server before reaching the smartphone over the cellular interface. Now consider a slight variation to this situation. The smartphone has sent almost all voice samples over the Wi\sphinxhyphen{}Fi interface. This interface fails when Siri collects the last voice sample. The smartphone sends this voice sample over the cellular connection. When the server detects that the smartphone sent data over the cellular interface, it can guess that there has been a problem with the Wi\sphinxhyphen{}Fi connection and configure its packet scheduler to prefer the cellular interface. For the Siri application, the best packet on the server is a scheduler that always send data over the connection that received the most recent data or acknowledgment. The arrival of a packet one connection is a confirmation that it connection currently works.
+
+\sphinxAtStartPar
+Apple improved their utilization of Multipath TCP since 2013. Initially, Multipath TCP exposed a private API that was only used by Siri. Nowadays, other Apple applications such as Apple Maps and Apple Music also use Multipath TCP. Third party applications also use Multipath TCP through the Swift API supported by recent versions of iOS.
+
+\sphinxAtStartPar
+Although this usage of Multipath TCP has been widely discussed, this was not the first commercial deployment. The first deployment was done by Multipath Networks, an Irish company that saw the potential benefits of Multipath TCP while it was being developed within the IETF. Their use case was very different. Emergency services like police or firemen started to use laptops connected to cellular networks. However, in rural areas, cellular coverage is sometimes flaky and some areas are not fully covered by the different cellular providers. This was a problem for firemen who were operating in an area that was not well covered by their cellular provider. Multipath Networks developed an embedded router that could connect to several cellular providers and would easily switch from one to another when required. They cooperated with the Multipath TCP developers to ensure that Multipath TCP could efficiently detect different types of failures that they had observed in the field.
+
+
+\section{Improving quality of experience}
+\label{\detokenize{usecases:improving-quality-of-experience}}
+\sphinxAtStartPar
+Another important use case for Multipath TCP on smartphones is to improve quality of experience. Smartphones can use either Wi\sphinxhyphen{}Fi or cellular. There are conditions where cellular provides better performance than Wi\sphinxhyphen{}Fi and the opposite is true. Initially, the smartphones preferred Wi\sphinxhyphen{}Fi over cellular because Wi\sphinxhyphen{}Fi was usually faster and cheaper. The situation changed as cellular network operators deployed 4G and now 5G and offered unlimited data plans. For many users, prioritizing Wi\sphinxhyphen{}Fi over cellular is not a requirement anymore. Given that there is no monetary incentive, when should a smartphone use Wi\sphinxhyphen{}Fi or cellular ? The answer depends on the current performance of the cellular or Wi\sphinxhyphen{}Fi network. There are many situations where a smartphone can use both Wi\sphinxhyphen{}Fi or cellular and they provide different performance. Here are a few classical examples. Consider a smartphone who is attached to a Wi\sphinxhyphen{}Fi network in a pub that is attached to a low bandwidth ADSL Internet access. While the Wi\sphinxhyphen{}Fi signal can be perfect from a radio viewpoint, the end\sphinxhyphen{}to\sphinxhyphen{}end performance can be very weak due to congestion on the ADSL link. In this case, the smartphone should provide use the cellular network to provide a good user experience. Another example is a smartphone in a company meeting room. The enterprise buildings are far from the cellular base station but the enterprise Wi\sphinxhyphen{}Fi is strong. In this case, the smartphone should probably use the Wi\sphinxhyphen{}Fi network. Between these two extremes, there are many situations where one network provides better performance than the other, possibly during short periods of time, e.g. due to congestion with other users, due to user mobility, …
+
+\sphinxAtStartPar
+A typical use case are interactive applications such as a map. When a user interacts with such an application, she expects that her gestures will immediately move the map shown on the screen and that any request for a path will be answered immediately. For such an application, the path manager would establish a connection over both networks. The two connections will always be active. TCP’s congestion control scheme automatically measures the performance of the two connections (delay, bandwidth, …) every time they are used to send data. The packet scheduler would then prefer the connection having the smallest delay and would switch from one connection to another if data needs to be retransmitted or delay becomes too high. As an example, Apple’s interactive policy prefers the Wi\sphinxhyphen{}Fi network as long as its delay is lower than 250 msec. If the delay increases too much, it switches automatically to cellular.
+
+\sphinxAtStartPar
+Music and video streaming are another example of a smartphone application that can leverage Multipath TCP when the quality of the Wi\sphinxhyphen{}Fi and cellular connections varies. These applications require a regular throughput to stream the music or the video from a server. When a user moves, the quality of the radio signal changes as she moves away from the antenna. In parallel, congestion caused by traffic from other users in the same network can decrease the available throughput. A path manager would support such an application by establishing a connection over both networks. The packet scheduler could initially prefer the Wi\sphinxhyphen{}Fi connection that is supposed to be cheaper, but it would monitor the average throughput. If the throughput drops below the bandwidth required to stream the music or the video, then it would start to use the other connection to transmit additional data.
+
+
+\section{Improving bandwidth}
+\label{\detokenize{usecases:improving-bandwidth}}
+\sphinxAtStartPar
+The previous sections have described use cases where Multipath TCP manages the utilization of networks that have enough capacity to support the applications. However, there are situations where a single network connection is not sufficient.
+
+\sphinxAtStartPar
+A first example concerns Internet access in rural areas. Several Internet access technologies are used to provide Internet access to home users and small enterprise networks: fiber, cable, xDSL, fixed wireless access and even satellite. Optical fiber provides the highest throughput, but its deployment cost increases with the distance. Today, it becomes economically feasible to deploy optical fibers in cities. However, the economic factors prevent a wide deployment of optical fibers in rural areas where the distance that needs to be covered to connect a single household is too high. Cable is a bit cheaper than fiber, but usually mainly deployed in cities. xDSL is already deployed in many rural areas since it relies on the telephone lines that have been installed decades ago. Unfortunately, these telephone lines are long and the bandwidth of an xDSL link decreases with the distance. Many users in rural areas are left with bandwidth of 10 Mbps or less. Satellites provided an alternative for isolated rural areas. However, the first deployment were based on geostationary satellites that cover a wide geographical area, but suffer from a high delay. Recently, companies such as Starlink started to deploy LEO satellites to serve rural areas. These satellites provide much lower delays compared to the geostationary ones.
+
+\sphinxAtStartPar
+Wireless is another option to server rural areas. Some operators have started to deploy Fixed Wireless Access networks. These rely on 4G, 5G or other technologies to serve all the households in the geographical area covered by the antennas. Depending on the population density, this typically requires to increase the capacity of the cellular network since the a household uses much more data than the average mobile user. To cope with this problem, some operators combine xDSL and cellular. In this case, the xDSL network is preferred and the cellular network is used when there is not enough capacity on the fixed network. Different hybrid network solutions have been deployed. One approach leverages Multipath TCP. In this case, two Multipath TCP proxies are used: one in the hybrid CPE and one in a server called the Hybrid Access Gateway (HAG) that is managed by the network provider. The interactions between the enduser device, the HCPE, the HAG and the final server are described in the figure below.
+
+\sphinxAtStartPar
+When the user device initiates a TCP connection, this connection is proxied by the HCPE that converts it into a Multipath TCP connection that is itself proxied by the HAG. Since very few servers support Multipath TCP Aschenbrenner \sphinxstyleemphasis{et al.} {[}\hyperlink{cite.biblio:id9003}{9}{]}, the HAG proxies a regular TCP connection towards the server. As Multipath TCP is used on the connection between the HCPE and the HAG, the HCPE can create a second connection over the cellular network. Two types of path managers can be used in this scenario. A first option is a path manager that immediately creates a connection over the cellular network once the connection over the xDSL network has been accepted. Since network operators usually want to use the cellular network only when the xDSL network is fully used, an other possibility for the path manager is to measure the load on the xDSL link and only enable initiate the connection on the cellular network once the xDSL usage is above some threshold. The packet scheduler also prefers the xDSL connection. It only uses the cellular one once the xDSL connection is fully used.
+
+\sphinxAtStartPar
+Another use case that received a lot of attention in the academic community are the datacenters {[}\hyperlink{cite.biblio:id8933}{10}{]}. A datacenter combines a large number of servers that are attached to the network and exchange a lot of data. A key characteristic of datacenters is that there are multiple equal cost IP paths between any pair of servers. Consider the simple datacenter shown in the figure below. Each server is attached to one Top of Rack (ToR) switch that is connected to several distribution switches that are themselves connected to core switches. A server attached to ToR1 can reach a server attached to ToR12 using different paths that go through different core and distribution switches.
+
+\sphinxAtStartPar
+In such a datacenter, all inter\sphinxhyphen{}switch links have the same bandwidth and the same cost from a routing viewpoint. The ToR switch considers them to equivalent and it can thus load balance the packets that it receives over these different paths. A classical solution to load\sphinxhyphen{}balance the packets is to rely on Equal Cost MultiPath (ECMP) {[}\hyperlink{cite.biblio:id2922}{11}{]}. ECMP aims at balancing the load evenly among the different paths that have the same cost while ensuring that all the packets that belong to a given transport flow follow exactly the same path to prevent reordering problems. A simple, but efficient and widely deployed ECMP technique is to hash the source and destination addresses and the source and destination port of each packet and use the computed hash value as an index to select the path to reach the destinations. All the packets that belong to a TCP connection are forwarded over the same path since they all contain the same source and destination address and ports. If the datacenter carries a large number of flows, then the traffic will be typically well balanced. If not, the paths that carry the larger connections could suffer from congestion. Raiciu et al. showed by simulations and measurements that Multipath TCP could improve the utilization of these datacenter networks {[}\hyperlink{cite.biblio:id8933}{10}{]}.
+
+\sphinxAtStartPar
+Each server is attached to a single ToR switch with a single network interface. Multipath TCP is used over this single interface. The intuition behind the solution proposed by Raiciu et al. is that, in such a datacenter, the path followed by the packets belonging to a TCP connection if function of the four\sphinxhyphen{}tuple. The source and destination addresses are fixed for all connections between two servers. The destination port is also fixed for a given server, but the server that initiates a connection can select different source ports. The path manager would be configured to establish a connection using 2, 4 or 8 different source ports. All these connections terminate on the same server, but follow different paths inside the network. If one of the paths becomes congested, then the throughput on the corresponding connection will be limited and the packet scheduler will push data over the other paths. Simulations and measurements showed that this approach helped to improve the utilization of the datacenter network.
+
+\sphinxAtStartPar
+Although this approach has been widely cited in the scientific literature, it does not seem to have been adopted by datacenter operators. This lack of deployment was probably caused by two main factors. First, the Multipath TCP implementation in the Linux kernel was only distributed as an unofficial patch for many years. Datacenter operators were reluctant to deploy an unofficial patch on their production server. A second factor is that Multipath TCP increases datacenter utilization by using buffers on the servers and on the network switches. With Multipath TCP, servers need to reorder the packets received over different paths. Some datacenter operators have considered that this additional delay could be an issue for request response applications that require shorter response times. Recent work on datacenters have focused more on reducing delays than improving network utilization.
+
+
 \chapter{Multipath TCP on recent Linux kernels}
 \label{\detokenize{mptcp-linux:multipath-tcp-on-recent-linux-kernels}}\label{\detokenize{mptcp-linux::doc}}
 \sphinxAtStartPar
@@ -1427,6 +1565,100 @@ If this counter increases, you should probably check the memory configuration
 of your host.
 
 
+\chapter{Multipath TCP on Apple devices}
+\label{\detokenize{mptcp-apple:multipath-tcp-on-apple-devices}}\label{\detokenize{mptcp-apple::doc}}
+\sphinxAtStartPar
+\sphinxhref{https://www.apple.com}{Apple} is among the early adopters of Multipath TCP.
+The first implementation appeared in iOS7 in September 2013. The implementation has been refined later and incorporated in MacOS as well. As of 2022, it is likely that iOS, iPadOS and MacOS use the same Multipath TCP implementations.
+
+\sphinxAtStartPar
+Apple does not publish lots of details about the features of its Multipath TCP implementations, but interested readers can explore the source code of recent OS releases.
+
+
+\section{Multipath TCP on MacOS Big Sur}
+\label{\detokenize{mptcp-apple:multipath-tcp-on-macos-big-sur}}
+\sphinxAtStartPar
+On MacOS, part of the Multipath TCP parameters can be specified using \sphinxcode{\sphinxupquote{sysctl}} variables. The following variables are supported on Big Sur :
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{g+go}{sysctl \PYGZhy{}a | grep mptcp}
+\PYG{g+go}{net.inet.mptcp.dss\PYGZus{}csum: 0}
+\PYG{g+go}{net.inet.mptcp.enable: 1}
+\PYG{g+go}{net.inet.mptcp.fail: 1}
+\PYG{g+go}{net.inet.mptcp.keepalive: 840}
+\PYG{g+go}{net.inet.mptcp.mptcp\PYGZus{}cap\PYGZus{}retr: 4}
+\PYG{g+go}{net.inet.mptcp.probecnt: 5}
+\PYG{g+go}{net.inet.mptcp.probeto: 1000}
+\PYG{g+go}{net.inet.mptcp.rto\PYGZus{}thresh: 1500}
+\PYG{g+go}{net.inet.mptcp.rtthist\PYGZus{}thresh: 600}
+\PYG{g+go}{net.inet.mptcp.alternate\PYGZus{}port: 0}
+\PYG{g+go}{net.inet.mptcp.dbg\PYGZus{}area: 31}
+\PYG{g+go}{net.inet.mptcp.dbg\PYGZus{}level: 1}
+\PYG{g+go}{net.inet.mptcp.pcbcount: 0}
+\PYG{g+go}{net.inet.mptcp.allow\PYGZus{}aggregate: 0}
+\PYG{g+go}{net.inet.mptcp.expected\PYGZus{}progress\PYGZus{}headstart: 5000}
+\PYG{g+go}{net.inet.mptcp.no\PYGZus{}first\PYGZus{}party: 0}
+\PYG{g+go}{net.inet.mptcp.nrto: 3}
+\PYG{g+go}{net.inet.mptcp.rto: 3}
+\PYG{g+go}{net.inet.mptcp.tw: 60}
+\end{sphinxVerbatim}
+
+\sphinxAtStartPar
+There is no detailed description of the definition of these \sphinxcode{\sphinxupquote{sysctl}}
+variables on MacOS, but some can be inferred based on their names and the
+sources of the  \sphinxhref{https://github.com/apple-oss-distributions/xnu/tree/main/bsd/netinet}{xnu sources}.
+
+\sphinxAtStartPar
+The first important \sphinxcode{\sphinxupquote{sysctl}} variable is \sphinxcode{\sphinxupquote{net.inet.mptcp.enable}}. It controls whether Multipath TCP is enabled (variable set to \sphinxcode{\sphinxupquote{1}}, the default) or not.
+
+\sphinxAtStartPar
+The second \sphinxcode{\sphinxupquote{sysctl}} variable is \sphinxcode{\sphinxupquote{net.inet.mptcp.dss\_csum}}. It controls the utilization of the \sphinxcode{\sphinxupquote{DSS}} checksum. By default, this checksum is disabled, but it can be enabled if required.
+
+\sphinxAtStartPar
+The third \sphinxcode{\sphinxupquote{sysctl}} variable, \sphinxcode{\sphinxupquote{net.inet.mptcp.mptcp\_cap\_retr}}  probably controls the number of \sphinxcode{\sphinxupquote{SYN}} with the \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option that are sent before removing this option to prevent broken middleboxes from blocking the establishment of Multipath TCP connections. The default value for this parameter is 4.
+
+\sphinxAtStartPar
+The fourth \sphinxcode{\sphinxupquote{sysctl}} variable, \sphinxcode{\sphinxupquote{net.inet.mptcp.allow\_aggregate}} probably controls whether Multipath TCP can actively use two different subflows to send data. The initial use case for Multipath TCP on Apple devices was mainly failover and the ability to aggregate bandwidth was added later. The default value of this option is \sphinxcode{\sphinxupquote{0}} which indicates that it is disabled.
+
+
+\section{Multipath TCP on MacOS Ventura}
+\label{\detokenize{mptcp-apple:multipath-tcp-on-macos-ventura}}
+
+\section{Adding Multipath TCP support to existing applications}
+\label{\detokenize{mptcp-apple:adding-multipath-tcp-support-to-existing-applications}}
+\sphinxAtStartPar
+Apple exposes some of the Multipath TCP features to applications written in Objective C using the \sphinxhref{https://developer.apple.com/documentation/network/2976692-nw\_connection\_start?language=objc}{Network Framework}. In particular, the \sphinxtitleref{example \textless{}https://developer.apple.com/documentation/network/implementing\_netcat\_with\_network\_framework?language=objc\textgreater{}} showing how to implement a \sphinxcode{\sphinxupquote{netcat}}\sphinxhyphen{}like application would useful for application developers.
+
+
+\section{Multipath TCP enabled applications}
+\label{\detokenize{mptcp-apple:multipath-tcp-enabled-applications}}
+\sphinxAtStartPar
+Apple uses Multipath TCP for some of its own applications, notably:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+Siri
+
+\item {} 
+\sphinxAtStartPar
+Apple Maps
+
+\item {} 
+\sphinxAtStartPar
+Apple Music
+
+\end{itemize}
+
+\sphinxAtStartPar
+Third party applications can also use Multipath TCP. These include :
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+the excellent \sphinxhref{https://secureshellfish.app}{Secure ShellFish} \sphinxcode{\sphinxupquote{ssh}} client
+
+\end{itemize}
+
+
 \chapter{The Transmission Control Protocol (TCP)}
 \label{\detokenize{tcp:the-transmission-control-protocol-tcp}}\label{\detokenize{tcp:chapter-tcp}}\label{\detokenize{tcp::doc}}
 \sphinxAtStartPar
@@ -1448,7 +1680,7 @@ TCP uses the three\sphinxhyphen{}way handshake as shown in \hyperref[\detokenize
 \draw[blue,thick, ->] (\c1,\y-2) -- (\s1,\y-3) node [midway, fill=white] {ACK\small{[seq=x+1,ack=y+1]}};
 \end{tikzpicture}\caption{Establishing a TCP connection using the three\sphinxhyphen{}way handshake}\label{\detokenize{tcp:id5}}\label{\detokenize{tcp:fig-tcp-handshake}}\end{figure}
 \sphinxAtStartPar
-TCP was designed to be extensible. The TCP header contains a TCP Header Length (THL) field that indicates the total length of the TCP header in four\sphinxhyphen{}bytes words. For the normal header, this field is set to 5, which corresponds to the 20 bytes long TCP header. Larger values of the THL field indicate that the segment contains one or more TCP options. TCP options are encoded as a Type\sphinxhyphen{}Length\sphinxhyphen{}Value field. The first byte specifies the Type, the second byte indicates the length of the entire TCP option in bytes. The utilization of TCP options is usually negotiated during the three\sphinxhyphen{}way\sphinxhyphen{}exchange. The client adds a TCP option in the \sphinxcode{\sphinxupquote{SYN}} segment. If the server does not recognize the option, it simply ignores it. If the server wants to utilize the extension for the connection, it simply adds the corresponding option in the \sphinxcode{\sphinxupquote{SYN+ACK}} segment. This is illustrated in \hyperref[\detokenize{tcp:fig-tcp-handshake-sack}]{Fig.\@ \ref{\detokenize{tcp:fig-tcp-handshake-sack}}} with the Selective Acknowledgments extension {[}\hyperlink{cite.biblio:id1948}{1}{]} as an example.
+TCP was designed to be extensible. The TCP header contains a TCP Header Length (THL) field that indicates the total length of the TCP header in four\sphinxhyphen{}bytes words. For the normal header, this field is set to 5, which corresponds to the 20 bytes long TCP header. Larger values of the THL field indicate that the segment contains one or more TCP options. TCP options are encoded as a Type\sphinxhyphen{}Length\sphinxhyphen{}Value field. The first byte specifies the Type, the second byte indicates the length of the entire TCP option in bytes. The utilization of TCP options is usually negotiated during the three\sphinxhyphen{}way\sphinxhyphen{}exchange. The client adds a TCP option in the \sphinxcode{\sphinxupquote{SYN}} segment. If the server does not recognize the option, it simply ignores it. If the server wants to utilize the extension for the connection, it simply adds the corresponding option in the \sphinxcode{\sphinxupquote{SYN+ACK}} segment. This is illustrated in \hyperref[\detokenize{tcp:fig-tcp-handshake-sack}]{Fig.\@ \ref{\detokenize{tcp:fig-tcp-handshake-sack}}} with the Selective Acknowledgments extension {[}\hyperlink{cite.biblio:id1948}{12}{]} as an example.
 \begin{figure}[htbp]\centering\capstart\begin{tikzpicture}
 \tikzmath{\c1=1;\c2=1.5; \s1=8; \s2=8.5; \max=4.5; }
 \tikzstyle{arrow} = [thick,->,>=stealth]
@@ -1507,7 +1739,7 @@ A TCP sender also stores the data that has been sent but has not yet been acknow
 A TCP receiver also maintains state variables. These include \sphinxcode{\sphinxupquote{rcv.next}}, the next expected sequence number. Data received in sequence can be delivered to the application while out\sphinxhyphen{}of\sphinxhyphen{}sequence data must be queued.
 
 \sphinxAtStartPar
-Finally, TCP implementations store the state of the connection according to the TCP state machine {[}\hyperlink{cite.biblio:id729}{2}{]}.
+Finally, TCP implementations store the state of the connection according to the TCP state machine {[}\hyperlink{cite.biblio:id729}{4}{]}.
 
 \sphinxAtStartPar
 TCP implementations include lots of optimizations that are outside the scope of this brief introduction. Let us know briefly describe how TCP sends data reliably. Consider a TCP connection established between a client and a server. \hyperref[\detokenize{tcp:fig-tcp-simple-data}]{Fig.\@ \ref{\detokenize{tcp:fig-tcp-simple-data}}} shows a simple data transfer between these two hosts. The sequence number of the first segment starts at \sphinxcode{\sphinxupquote{1234}}, the current value of \sphinxcode{\sphinxupquote{snd.nxt}}. For TCP, each transmitted byte consumes one sequence number. Thus, after having sent the first segment, the client’s \sphinxcode{\sphinxupquote{snd.nxt}} is set to \sphinxcode{\sphinxupquote{1238}}.  The server receives the data in sequence and immediately acknowledges it. A TCP receiver always sets the acknowledgment number of the segments that it sends with the next expected sequence number, i.e. \sphinxcode{\sphinxupquote{rcv.nxt}}.
@@ -1524,7 +1756,7 @@ TCP implementations include lots of optimizations that are outside the scope of 
 \draw[blue,thick, ->] (\s1,\y-2) -- (\c1,\y-3) node [midway, align=left, fill=white] {ACK\small{[ack=1224]}};
 \end{tikzpicture}\caption{TCP Reliable data transfer}\label{\detokenize{tcp:id7}}\label{\detokenize{tcp:fig-tcp-simple-data}}\end{figure}
 \sphinxAtStartPar
-In practice, TCP implementations use the Nagle algorithm {[}\hyperlink{cite.biblio:id831}{3}{]} and thus usually try to send full segments. They use the Maximum Segment Size (MSS) option during the handshake and PathMTU discovery the determine the largest segment which can be safely sent over a connection. Furthermore, TCP implementations usually delay acknowledgments and only acknowledge every second segment when these are received in sequence. This is illustrated in \hyperref[\detokenize{tcp:fig-tcp-data-delack}]{Fig.\@ \ref{\detokenize{tcp:fig-tcp-data-delack}}}.
+In practice, TCP implementations use the Nagle algorithm {[}\hyperlink{cite.biblio:id831}{13}{]} and thus usually try to send full segments. They use the Maximum Segment Size (MSS) option during the handshake and PathMTU discovery the determine the largest segment which can be safely sent over a connection. Furthermore, TCP implementations usually delay acknowledgments and only acknowledge every second segment when these are received in sequence. This is illustrated in \hyperref[\detokenize{tcp:fig-tcp-data-delack}]{Fig.\@ \ref{\detokenize{tcp:fig-tcp-data-delack}}}.
 \begin{figure}[htbp]\centering\capstart\begin{tikzpicture}
 \tikzmath{\c1=1;\c2=1.5; \s1=8; \s2=8.5; \max=5.0; }
 \tikzstyle{arrow} = [thick,->,>=stealth]
@@ -1550,7 +1782,7 @@ TCP uses a single segment type and each segment contains both a sequence number 
 \draw[blue,thick, ->] (\c1,\y-2) -- (\s1,\y-3) node [midway, fill=white] {ACK\small{[seq=1238,ack=5680,len=4,data="ghij"]}};
 \end{tikzpicture}\caption{TCP piggybacking.}\label{\detokenize{tcp:id9}}\label{\detokenize{tcp:fig-tcp-piggyback}}\end{figure}
 \sphinxAtStartPar
-TCP uses different techniques to retransmit corrupted or lost data. The TCP header contains a 16 bits checksum that is computed over the entire TCP segment and a part of the IP header. The value of this checksum is computed by the sender and checked by the receiver to detect transmission errors. TCP copes with these errors by retransmitting data. The simplest technique is to rely on a retransmission timer. TCP continuously measure the round\sphinxhyphen{}trip\sphinxhyphen{}time, i.e. the delay between the transmission of a segment and the reception of the corresponding acknowledgment. It then sets a per\sphinxhyphen{}connection retransmission timer based on its estimations of the mean rtt and its variance {[}\hyperlink{cite.biblio:id6147}{4}{]}. This is illustrated in \hyperref[\detokenize{tcp:fig-tcp-retrans}]{Fig.\@ \ref{\detokenize{tcp:fig-tcp-retrans}}} where the arrow terminated with red cross corresponds to a lost segment. Upon expiration of the retransmission timer, the client retransmits the unacknowledged segment.
+TCP uses different techniques to retransmit corrupted or lost data. The TCP header contains a 16 bits checksum that is computed over the entire TCP segment and a part of the IP header. The value of this checksum is computed by the sender and checked by the receiver to detect transmission errors. TCP copes with these errors by retransmitting data. The simplest technique is to rely on a retransmission timer. TCP continuously measure the round\sphinxhyphen{}trip\sphinxhyphen{}time, i.e. the delay between the transmission of a segment and the reception of the corresponding acknowledgment. It then sets a per\sphinxhyphen{}connection retransmission timer based on its estimations of the mean rtt and its variance {[}\hyperlink{cite.biblio:id6147}{14}{]}. This is illustrated in \hyperref[\detokenize{tcp:fig-tcp-retrans}]{Fig.\@ \ref{\detokenize{tcp:fig-tcp-retrans}}} where the arrow terminated with red cross corresponds to a lost segment. Upon expiration of the retransmission timer, the client retransmits the unacknowledged segment.
 \begin{figure}[htbp]\centering\capstart\begin{tikzpicture}
 \tikzmath{\c1=1;\c2=1.5; \s1=8; \s2=8.5; \max=7; }
 \tikzstyle{arrow} = [thick,->,>=stealth]
@@ -1607,13 +1839,13 @@ When the client and the sender have exchanged all the required data, they can te
 \chapter{Multipath TCP}
 \label{\detokenize{mptcp:multipath-tcp}}\label{\detokenize{mptcp::doc}}
 \sphinxAtStartPar
-Multipath TCP {[}\hyperlink{cite.biblio:id8500}{5}{]} is an extension to the TCP protocol {[}\hyperlink{cite.biblio:id729}{2}{]} that was described in chapter {\hyperref[\detokenize{tcp:chapter-tcp}]{\sphinxcrossref{\DUrole{std,std-ref}{The Transmission Control Protocol (TCP)}}}}. We start with an overview of Multipath TCP. Then we explain how a Multipath TCP connection can be established. Then we analyze how data is exchanged over different paths and explain the multipath congestion control schemes. Finally, we explain how Multipath TCP connections can be terminated.
+Multipath TCP {[}\hyperlink{cite.biblio:id8500}{15}{]} is an extension to the TCP protocol {[}\hyperlink{cite.biblio:id729}{4}{]} that was described in chapter {\hyperref[\detokenize{tcp:chapter-tcp}]{\sphinxcrossref{\DUrole{std,std-ref}{The Transmission Control Protocol (TCP)}}}}. We start with an overview of Multipath TCP. Then we explain how a Multipath TCP connection can be established. Then we analyze how data is exchanged over different paths and explain the multipath congestion control schemes. Finally, we explain how Multipath TCP connections can be terminated.
 
 
 \section{A brief overview of Multipath TCP}
 \label{\detokenize{mptcp:a-brief-overview-of-multipath-tcp}}\label{\detokenize{mptcp:mptcp-overview}}
 \sphinxAtStartPar
-The main design objective for Multipath TCP {[}\hyperlink{cite.biblio:id6658}{6}{]} was to enable hosts to exchange the packets that belong to a single TCP connection over different network paths. Several definitions are possible for a network path. Considering a TCP connection between a client and a server, a network path can be defined as the succession of the links and routers that create a path between the client and the server. For example, in \hyperref[\detokenize{mptcp:fig-simple-network}]{Fig.\@ \ref{\detokenize{mptcp:fig-simple-network}}}, there are many paths between the client host \sphinxtitleref{C} and the server \sphinxtitleref{S}, e.g. \(C \rightarrow R1 \rightarrow R2 \rightarrow R4 \rightarrow S\) and \(C \rightarrow R1 \rightarrow R3 \rightarrow R4 \rightarrow S\), but also \(C \rightarrow R1 \rightarrow R3 \rightarrow R5 \rightarrow R4 \rightarrow S\) or even \(C \rightarrow R1 \rightarrow R2 \rightarrow R4 \rightarrow R3 \rightarrow R5 \rightarrow R4 \rightarrow S\).
+The main design objective for Multipath TCP {[}\hyperlink{cite.biblio:id6658}{8}{]} was to enable hosts to exchange the packets that belong to a single TCP connection over different network paths. Several definitions are possible for a network path. Considering a TCP connection between a client and a server, a network path can be defined as the succession of the links and routers that create a path between the client and the server. For example, in \hyperref[\detokenize{mptcp:fig-simple-network}]{Fig.\@ \ref{\detokenize{mptcp:fig-simple-network}}}, there are many paths between the client host \sphinxtitleref{C} and the server \sphinxtitleref{S}, e.g. \(C \rightarrow R1 \rightarrow R2 \rightarrow R4 \rightarrow S\) and \(C \rightarrow R1 \rightarrow R3 \rightarrow R4 \rightarrow S\), but also \(C \rightarrow R1 \rightarrow R3 \rightarrow R5 \rightarrow R4 \rightarrow S\) or even \(C \rightarrow R1 \rightarrow R2 \rightarrow R4 \rightarrow R3 \rightarrow R5 \rightarrow R4 \rightarrow S\).
 \begin{figure}[htbp]\centering\capstart\begin{tikzpicture}
 \tikzset{router/.style = {rectangle, draw, text centered, minimum height=2em}, }
 \tikzset{host/.style = {circle, draw, text centered, minimum height=2em}, }
@@ -1635,10 +1867,10 @@ The main design objective for Multipath TCP {[}\hyperlink{cite.biblio:id6658}{6}
 (R4) edge (S);
 \end{tikzpicture}\caption{A simple network providing multiple paths between \(C\) and \(S\)}\label{\detokenize{mptcp:id52}}\label{\detokenize{mptcp:fig-simple-network}}\end{figure}
 \sphinxAtStartPar
-During the first discussions on Multipath TCP within the IETF, there was a debate on the types of paths that Multipath TCP could use in IP networks. Although networks provide a wide range of paths between a source and a destination, it is not necessarily simple to use all these paths in a pure IP network. Looking a \hyperref[\detokenize{mptcp:fig-simple-network}]{Fig.\@ \ref{\detokenize{mptcp:fig-simple-network}}} and assuming that all links have the same IGP weight, packets sent by \sphinxtitleref{C} will follow one of the two shortest paths, i.e. \(C \rightarrow R1 \rightarrow R2 \rightarrow R4 \rightarrow S\) or \(C \rightarrow R1 \rightarrow R3 \rightarrow R4 \rightarrow S\). Since routers usually use hash\sphinxhyphen{}based load\sphinxhyphen{}balancing {[}\hyperlink{cite.biblio:id2922}{7}{]} to distribute packets over equal cost paths, all the packets from a given connection will follow either the first or the second shortest path. In most networks, the path followed by a TCP connection will only change if there are link or router failures on this particular path.
+During the first discussions on Multipath TCP within the IETF, there was a debate on the types of paths that Multipath TCP could use in IP networks. Although networks provide a wide range of paths between a source and a destination, it is not necessarily simple to use all these paths in a pure IP network. Looking a \hyperref[\detokenize{mptcp:fig-simple-network}]{Fig.\@ \ref{\detokenize{mptcp:fig-simple-network}}} and assuming that all links have the same IGP weight, packets sent by \sphinxtitleref{C} will follow one of the two shortest paths, i.e. \(C \rightarrow R1 \rightarrow R2 \rightarrow R4 \rightarrow S\) or \(C \rightarrow R1 \rightarrow R3 \rightarrow R4 \rightarrow S\). Since routers usually use hash\sphinxhyphen{}based load\sphinxhyphen{}balancing {[}\hyperlink{cite.biblio:id2922}{11}{]} to distribute packets over equal cost paths, all the packets from a given connection will follow either the first or the second shortest path. In most networks, the path followed by a TCP connection will only change if there are link or router failures on this particular path.
 
 \sphinxAtStartPar
-When Multipath TCP was designed, the IETF did not want to design techniques to enable the transport layer to specify the paths that packets should follow. They opted for a very conservative definition of the paths that Multipath TCP can use {[}\hyperlink{cite.biblio:id6033}{8}{]}. Multipath TCP assumes that the endpoints of a TCP connection are identified by their IP addresses. If two hosts want to exchange packets over different paths, then at least one of them must have two or more IP addresses. This covers two very important use cases:
+When Multipath TCP was designed, the IETF did not want to design techniques to enable the transport layer to specify the paths that packets should follow. They opted for a very conservative definition of the paths that Multipath TCP can use {[}\hyperlink{cite.biblio:id6033}{16}{]}. Multipath TCP assumes that the endpoints of a TCP connection are identified by their IP addresses. If two hosts want to exchange packets over different paths, then at least one of them must have two or more IP addresses. This covers two very important use cases:
 \begin{itemize}
 \item {} 
 \sphinxAtStartPar
@@ -1658,7 +1890,7 @@ In this document, we will often use smartphones to illustrate Multipath TCP clie
 Using non\sphinxhyphen{}equal cost paths with Multipath TCP
 
 \sphinxAtStartPar
-When Multipath TCP was designed, there was no standardized solution that enabled a host to control the path followed by its packets inside a network. This is slowly changing. First, the IETF has adopted the Segment Routing architecture {[}\hyperlink{cite.biblio:id8227}{9}{]}. This architecture is a modern version of source routing which can be used in MPLS and IPv6 networks. In particular, using the IPv6 Segment Routing Header {[}\hyperlink{cite.biblio:id8570}{10}{]}, a host can decide the path that its packets will follow inside the network. This opens new possibilities for Multipath TCP. Some of these possibilities are explored by the Path Aware Networking Research Group of the Internet Research Task Force.
+When Multipath TCP was designed, there was no standardized solution that enabled a host to control the path followed by its packets inside a network. This is slowly changing. First, the IETF has adopted the Segment Routing architecture {[}\hyperlink{cite.biblio:id8227}{17}{]}. This architecture is a modern version of source routing which can be used in MPLS and IPv6 networks. In particular, using the IPv6 Segment Routing Header {[}\hyperlink{cite.biblio:id8570}{18}{]}, a host can decide the path that its packets will follow inside the network. This opens new possibilities for Multipath TCP. Some of these possibilities are explored by the Path Aware Networking Research Group of the Internet Research Task Force.
 \end{sphinxadmonition}
 
 \sphinxAtStartPar
@@ -1731,7 +1963,7 @@ the remote port
 \end{itemize}
 
 \sphinxAtStartPar
-Assume that the client uses IP address \(IP_{\alpha}\) on its Wi\sphinxhyphen{}Fi interface and \(IP_{\beta}\) on its cellular interface and that \(p\) is the port used by the server. If the client used port \(p_1\) to create the initial subflow, then the identifier of this subflow on the server is \(<IP_{S},IP_{\alpha},p,p_{1}>\). Similarly, the second subflow is identified by the \(<IP_{S},IP_{\beta},p,p_{2}>\) tuple on the server. Note that these two connection identifiers differ by at least one IP address as specified in {[}\hyperlink{cite.biblio:id6033}{8}{]}.
+Assume that the client uses IP address \(IP_{\alpha}\) on its Wi\sphinxhyphen{}Fi interface and \(IP_{\beta}\) on its cellular interface and that \(p\) is the port used by the server. If the client used port \(p_1\) to create the initial subflow, then the identifier of this subflow on the server is \(<IP_{S},IP_{\alpha},p,p_{1}>\). Similarly, the second subflow is identified by the \(<IP_{S},IP_{\beta},p,p_{2}>\) tuple on the server. Note that these two connection identifiers differ by at least one IP address as specified in {[}\hyperlink{cite.biblio:id6033}{16}{]}.
 
 \sphinxAtStartPar
 A server usually manages a large number of simultaneous connections. Furthermore, a client may establish several connections with the same server. To associate a new subflow with an existing Multipath TCP connection, a server must be able to link an incoming \sphinxcode{\sphinxupquote{SYN}} with the corresponding Multipath TCP connection. For this, the client must include an identifier of the associated Multipath TCP connection in its \sphinxcode{\sphinxupquote{MPJ}} option. This identifier must unambiguously identify the corresponding Multipath TCP connection on the server.
@@ -1783,7 +2015,7 @@ To cope with this problem, Multipath TCP uses a local identifier, called \sphinx
 Multipath TCP in datacenters
 
 \sphinxAtStartPar
-The Multipath TCP architecture {[}\hyperlink{cite.biblio:id6033}{8}{]} assumes that at least one of the communicating hosts use different IP addresses to identify the different paths used by a Multipath TCP connection. In practice, this architectural requirement is not always enforced by Multipath TCP implementations. A Multipath TCP implementation can combine different subflows into one Multipath TCP connection provided that each subflow is identified by a different four\sphinxhyphen{}tuple. Two subflows between two communicating hosts can differ in their client\sphinxhyphen{}selected ports. This solution has been chosen when Multipath TCP was proposed to mitigate congestion in datacenter networks {[}\hyperlink{cite.biblio:id8933}{11}{]}.
+The Multipath TCP architecture {[}\hyperlink{cite.biblio:id6033}{16}{]} assumes that at least one of the communicating hosts use different IP addresses to identify the different paths used by a Multipath TCP connection. In practice, this architectural requirement is not always enforced by Multipath TCP implementations. A Multipath TCP implementation can combine different subflows into one Multipath TCP connection provided that each subflow is identified by a different four\sphinxhyphen{}tuple. Two subflows between two communicating hosts can differ in their client\sphinxhyphen{}selected ports. This solution has been chosen when Multipath TCP was proposed to mitigate congestion in datacenter networks {[}\hyperlink{cite.biblio:id8933}{10}{]}.
 
 \sphinxAtStartPar
 Several designs exist for datacenter networks, but the fat\sphinxhyphen{}tree architecture shown in \hyperref[\detokenize{mptcp:fig-fat-tree}]{Fig.\@ \ref{\detokenize{mptcp:fig-fat-tree}}} is a very popular one.
@@ -1835,7 +2067,7 @@ Several designs exist for datacenter networks, but the fat\sphinxhyphen{}tree ar
  (A4) edge (C2);
  \end{tikzpicture}\caption{A simple datacenter network}\label{\detokenize{mptcp:id57}}\label{\detokenize{mptcp:fig-fat-tree}}\end{figure}
 \sphinxAtStartPar
-This network topology exposes a large number of equal cost paths between the servers that are shown using circles in \hyperref[\detokenize{mptcp:fig-fat-tree}]{Fig.\@ \ref{\detokenize{mptcp:fig-fat-tree}}}. For example, consider the paths between the \(\alpha\) and \(\pi\) hosts. The paths start at \(E1\). This router can reach \(E4\) and \(\pi\) via \(A1\) or \(A2\). Each of these two aggregation routers can reach \(\pi\) via one of the two core routers. These two routers can then balance the flows via both \(A3\) and \(A4\). There are \(2^{4}=16\) different paths between \(\alpha\) and \(\pi\) in this very small network. If each of these routers balance the incoming packets using a hash function {[}\hyperlink{cite.biblio:id2922}{7}{]} that takes as input their source and destination addresses and ports, then the subflows of a Multipath TCP connection that use different client problems will be spread evenly across the network topology.  Raiciu et al. provide simulations and measurements showing the benefits of using Multipath TCP in datacenters {[}\hyperlink{cite.biblio:id8933}{11}{]}.
+This network topology exposes a large number of equal cost paths between the servers that are shown using circles in \hyperref[\detokenize{mptcp:fig-fat-tree}]{Fig.\@ \ref{\detokenize{mptcp:fig-fat-tree}}}. For example, consider the paths between the \(\alpha\) and \(\pi\) hosts. The paths start at \(E1\). This router can reach \(E4\) and \(\pi\) via \(A1\) or \(A2\). Each of these two aggregation routers can reach \(\pi\) via one of the two core routers. These two routers can then balance the flows via both \(A3\) and \(A4\). There are \(2^{4}=16\) different paths between \(\alpha\) and \(\pi\) in this very small network. If each of these routers balance the incoming packets using a hash function {[}\hyperlink{cite.biblio:id2922}{11}{]} that takes as input their source and destination addresses and ports, then the subflows of a Multipath TCP connection that use different client problems will be spread evenly across the network topology.  Raiciu et al. provide simulations and measurements showing the benefits of using Multipath TCP in datacenters {[}\hyperlink{cite.biblio:id8933}{10}{]}.
 \end{sphinxadmonition}
 
 \sphinxAtStartPar
@@ -1977,18 +2209,18 @@ The Multipath TCP working group was worried about the risk of attacks with this 
 \node[black,fill=white,align=right] at (\c1,-1)  {HMAC2=HMAC(key=$Client_{secret}$||$Server_{Secret}$,\\msg=$Client_{random}||Server_{random}$)};
 \end{tikzpicture}\caption{Creating a Multipath TCP connection with a MPO option}\label{\detokenize{mptcp:id62}}\label{\detokenize{mptcp:fig-tcp-handshake-mpo-secret}}\end{figure}
 \sphinxAtStartPar
-Using these two components of the shared secret, the client and the server must be able to authenticate the additional subflows without revealing the shared secret to an attacker who is able to capture packets on the path of the additional subflow. Multipath TCP requires each host to perform a HMAC {[}\hyperlink{cite.biblio:id2034}{12}{]} of a random number to confirm their knowledge of the shared secret. This is illustrated in the second part of \hyperref[\detokenize{mptcp:fig-tcp-handshake-mpo-secret}]{Fig.\@ \ref{\detokenize{mptcp:fig-tcp-handshake-mpo-secret}}}. To create the additional subflow, the client send a \sphinxcode{\sphinxupquote{SYN}} with the \sphinxcode{\sphinxupquote{MP\_JOIN}} option containing the \(Server_{token}\) and a random nonce, \(Client_{random}\). The server confirms the establishment of the subflow by sending a \sphinxcode{\sphinxupquote{SYN+ACK}} containing the HMAC computed using the \(Client_{random}\) and the \(Client_{secret}\) and \(Server_{secret}\) input. Thanks to this HMAC computation, the server can reveal that it knows \(Client_{secret}\) and \(Server_{secret}\) without explicitly sending them. The server also places a random number, \(Server_{random}\) in the \sphinxcode{\sphinxupquote{MP\_JOIN}} option of the \sphinxcode{\sphinxupquote{SYN+ACK}}. The client computes a HMAC and returns it in the third \sphinxcode{\sphinxupquote{ACK}}. With these two HMACs, the client and the server can authenticate the establishment of the additional subflow without revealing the shared secret.
+Using these two components of the shared secret, the client and the server must be able to authenticate the additional subflows without revealing the shared secret to an attacker who is able to capture packets on the path of the additional subflow. Multipath TCP requires each host to perform a HMAC {[}\hyperlink{cite.biblio:id2034}{19}{]} of a random number to confirm their knowledge of the shared secret. This is illustrated in the second part of \hyperref[\detokenize{mptcp:fig-tcp-handshake-mpo-secret}]{Fig.\@ \ref{\detokenize{mptcp:fig-tcp-handshake-mpo-secret}}}. To create the additional subflow, the client send a \sphinxcode{\sphinxupquote{SYN}} with the \sphinxcode{\sphinxupquote{MP\_JOIN}} option containing the \(Server_{token}\) and a random nonce, \(Client_{random}\). The server confirms the establishment of the subflow by sending a \sphinxcode{\sphinxupquote{SYN+ACK}} containing the HMAC computed using the \(Client_{random}\) and the \(Client_{secret}\) and \(Server_{secret}\) input. Thanks to this HMAC computation, the server can reveal that it knows \(Client_{secret}\) and \(Server_{secret}\) without explicitly sending them. The server also places a random number, \(Server_{random}\) in the \sphinxcode{\sphinxupquote{MP\_JOIN}} option of the \sphinxcode{\sphinxupquote{SYN+ACK}}. The client computes a HMAC and returns it in the third \sphinxcode{\sphinxupquote{ACK}}. With these two HMACs, the client and the server can authenticate the establishment of the additional subflow without revealing the shared secret.
 
 \begin{sphinxadmonition}{note}{Note:}
 \sphinxAtStartPar
 The security of Multipath TCP depends on the security of the initial handshake
 
 \sphinxAtStartPar
-The ability of correctly authenticate the addition of new subflows to a Multipath TCP connection depends on the secrecy of the \(Client_{secret}\) and \(Server_{secret}\) exchanged in the \sphinxcode{\sphinxupquote{SYN}} and \sphinxcode{\sphinxupquote{SYN+ACK}} of the initial handshake. An on\sphinxhyphen{}path attacker which is able to capture this initial handshake has all the information required to attach a new subflow to this Multipath TCP connection at any time. Multipath does not include the strong cryptographic techniques (besides HMAC) that would have been required to completely secure the establishment the protocol and the establishment of additional subflows in particular. This threat was considered acceptable for Multipath TCP {[}\hyperlink{cite.biblio:id6032}{13}{]} because an attacker who can capture the packets of a single path TCP connection can also inject data inside this connection. To be fully secure Multipath TCP would need to rely on cryptographic techniques that are similar to those used in Transport Layer Security {[}\hyperlink{cite.biblio:id8271}{14}{]}.
+The ability of correctly authenticate the addition of new subflows to a Multipath TCP connection depends on the secrecy of the \(Client_{secret}\) and \(Server_{secret}\) exchanged in the \sphinxcode{\sphinxupquote{SYN}} and \sphinxcode{\sphinxupquote{SYN+ACK}} of the initial handshake. An on\sphinxhyphen{}path attacker which is able to capture this initial handshake has all the information required to attach a new subflow to this Multipath TCP connection at any time. Multipath does not include the strong cryptographic techniques (besides HMAC) that would have been required to completely secure the establishment the protocol and the establishment of additional subflows in particular. This threat was considered acceptable for Multipath TCP {[}\hyperlink{cite.biblio:id6032}{20}{]} because an attacker who can capture the packets of a single path TCP connection can also inject data inside this connection. To be fully secure Multipath TCP would need to rely on cryptographic techniques that are similar to those used in Transport Layer Security {[}\hyperlink{cite.biblio:id8271}{5}{]}.
 \end{sphinxadmonition}
 
 \sphinxAtStartPar
-The solution described above meets the requirements of the Internet Engineering Task Force. From a security viewpoint, the \(Client_{secret}\), \(Server_{secret}\) and the random nonces should be as large as possible to prevent attacks where their values are simply guessed. Unfortunately, since Multipath TCP uses TCP options to exchange all this information, we need to ensure that it fits inside the extended header of a TCP \sphinxcode{\sphinxupquote{SYN}}. The TCP specification {[}\hyperlink{cite.biblio:id729}{2}{]} reserves up to 40 bytes to place the TCP options in a \sphinxcode{\sphinxupquote{SYN}}. Today’s TCP stacks already consume 4 bytes for the \sphinxcode{\sphinxupquote{MSS}} option {[}\hyperlink{cite.biblio:id729}{2}{]}, 3 for the \sphinxcode{\sphinxupquote{Window Scale}} option {[}\hyperlink{cite.biblio:id1255}{15}{]}, 2 for \sphinxcode{\sphinxupquote{SACK Permitted}} {[}\hyperlink{cite.biblio:id1948}{1}{]} and 10 for the timestamp option {[}\hyperlink{cite.biblio:id1255}{15}{]}. This leaves only 20 bytes to encode a Multipath TCP option that must contain an initial sequence number, a token and a secret. Multipath TCP solves this problem by deriving these three values from a single field encoded in a TCP option. Let us now analyze the Multipath TCP handshake in more details.
+The solution described above meets the requirements of the Internet Engineering Task Force. From a security viewpoint, the \(Client_{secret}\), \(Server_{secret}\) and the random nonces should be as large as possible to prevent attacks where their values are simply guessed. Unfortunately, since Multipath TCP uses TCP options to exchange all this information, we need to ensure that it fits inside the extended header of a TCP \sphinxcode{\sphinxupquote{SYN}}. The TCP specification {[}\hyperlink{cite.biblio:id729}{4}{]} reserves up to 40 bytes to place the TCP options in a \sphinxcode{\sphinxupquote{SYN}}. Today’s TCP stacks already consume 4 bytes for the \sphinxcode{\sphinxupquote{MSS}} option {[}\hyperlink{cite.biblio:id729}{4}{]}, 3 for the \sphinxcode{\sphinxupquote{Window Scale}} option {[}\hyperlink{cite.biblio:id1255}{21}{]}, 2 for \sphinxcode{\sphinxupquote{SACK Permitted}} {[}\hyperlink{cite.biblio:id1948}{12}{]} and 10 for the timestamp option {[}\hyperlink{cite.biblio:id1255}{21}{]}. This leaves only 20 bytes to encode a Multipath TCP option that must contain an initial sequence number, a token and a secret. Multipath TCP solves this problem by deriving these three values from a single field encoded in a TCP option. Let us now analyze the Multipath TCP handshake in more details.
 
 
 \subsection{The Multipath TCP handshake}
@@ -2013,7 +2245,7 @@ A Multipath TCP connection starts with a three\sphinxhyphen{}way handshake like 
 Multipath TCP version 0
 
 \sphinxAtStartPar
-The first version of Multipath TCP used a slightly different handshake {[}\hyperlink{cite.biblio:id6658}{6}{]}. The \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option sent by the client contains the 64 bits key chosen by the client. The \sphinxcode{\sphinxupquote{SYN+ACK}} segment contains an \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option with 64 bits key chosen by the server. The client echoes the client and server keys in the third \sphinxcode{\sphinxupquote{ACK}} of the handshake.
+The first version of Multipath TCP used a slightly different handshake {[}\hyperlink{cite.biblio:id6658}{8}{]}. The \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option sent by the client contains the 64 bits key chosen by the client. The \sphinxcode{\sphinxupquote{SYN+ACK}} segment contains an \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option with 64 bits key chosen by the server. The client echoes the client and server keys in the third \sphinxcode{\sphinxupquote{ACK}} of the handshake.
 \begin{figure}[H]\centering\capstart\begin{tikzpicture}
 \tikzmath{\c1=1;\c2=1.5; \s1=8; \s2=8.5; \max=6; }
 \tikzstyle{arrow} = [thick,->,>=stealth]
@@ -2029,13 +2261,13 @@ The first version of Multipath TCP used a slightly different handshake {[}\hyper
 \end{tikzpicture}\caption{Negotiating the utilization of Multipath TCP version 0}\label{\detokenize{mptcp:id64}}\label{\detokenize{mptcp:fig-tcp-handshake-mptcp-v0}}\end{figure}\end{sphinxadmonition}
 
 \sphinxAtStartPar
-The 64 bits random keys chosen by the client and the server play three different roles in Multipath TCP. Their first role is to identify the Multipath TCP connection to which an additional connection must be attached. Since a Multipath TCP connection can combine several TCP connections, Multipath TCP cannot use the IP addresses and port numbers to identify a TCP connection. Multipath TCP uses a specific identifier that is called a token. For technical reasons, this token is derived from the 64 bits key as the most significant 32 bits of the SHA\sphinxhyphen{}256 {[}\hyperlink{cite.biblio:id6083}{16}{]} hash of the key. The second role of the 64 bits keys is to authenticate the establishment of additional connections as we will see shortly. Finally, the keys are also used to compute random initial sequence numbers.
+The 64 bits random keys chosen by the client and the server play three different roles in Multipath TCP. Their first role is to identify the Multipath TCP connection to which an additional connection must be attached. Since a Multipath TCP connection can combine several TCP connections, Multipath TCP cannot use the IP addresses and port numbers to identify a TCP connection. Multipath TCP uses a specific identifier that is called a token. For technical reasons, this token is derived from the 64 bits key as the most significant 32 bits of the SHA\sphinxhyphen{}256 {[}\hyperlink{cite.biblio:id6083}{22}{]} hash of the key. The second role of the 64 bits keys is to authenticate the establishment of additional connections as we will see shortly. Finally, the keys are also used to compute random initial sequence numbers.
 
 \sphinxAtStartPar
 The main benefit of Multipath TCP is that a Multipath TCP connection can combine different TCP connections that potentially use different paths. Starting from now on, we will consider a client with two network interfaces and a server with one network interface. This could for example correspond to a client application running on a smartphone that interacts with a server. We explore more complex scenarios later.
 
 \sphinxAtStartPar
-We can know explain how a Multipath TCP connection can combine different TCP connections. According to the Multipath TCP specification, these connections are called subflows {[}\hyperlink{cite.biblio:id8500}{5}{]}. We also adopt this terminology in this document. \hyperref[\detokenize{mptcp:fig-mptcp-join}]{Fig.\@ \ref{\detokenize{mptcp:fig-mptcp-join}}} shows a Multipath TCP that combines two subflows. To establish the Multipath TCP connection, the client initiates the initial subflow by using the \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option during the three\sphinxhyphen{}way handshake. At the end of the initial handshake, the client and the server have exchanged their keys. Based on their keys, they have both computed the token that the remote host uses to identify the Multipath TCP connection.
+We can know explain how a Multipath TCP connection can combine different TCP connections. According to the Multipath TCP specification, these connections are called subflows {[}\hyperlink{cite.biblio:id8500}{15}{]}. We also adopt this terminology in this document. \hyperref[\detokenize{mptcp:fig-mptcp-join}]{Fig.\@ \ref{\detokenize{mptcp:fig-mptcp-join}}} shows a Multipath TCP that combines two subflows. To establish the Multipath TCP connection, the client initiates the initial subflow by using the \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option during the three\sphinxhyphen{}way handshake. At the end of the initial handshake, the client and the server have exchanged their keys. Based on their keys, they have both computed the token that the remote host uses to identify the Multipath TCP connection.
 
 \sphinxAtStartPar
 To attach a second subflow to this Multipath TCP connection, the client needs to create it. For this, it starts a three\sphinxhyphen{}way handshake with the server by sending a \sphinxcode{\sphinxupquote{SYN}} segment containing the \sphinxcode{\sphinxupquote{MP\_JOIN}} option. This option indicates that the client uses Multipath TCP and wishes to attach this new connection to an existing Multipath TCP connection. The \sphinxcode{\sphinxupquote{MP\_JOIN}} option contains two important fields:
@@ -2078,7 +2310,7 @@ The server uses the random nonce sent by the client and its own random nonce to 
 Generating Multipath TCP keys
 
 \sphinxAtStartPar
-From a security viewpoint, the keys that Multipath TCP hosts exchange in the \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option should be completely random to prevent them from being guessed by attackers. However, since the token is derived from the key, it cannot be completely random. A host will typically generate a random key and hash it into a token to verify that it does not correspond to an existing connection. On clients, with a few tens of connections, this is not a concern, but on servers, the delay to generate random keys increases with the number of established Multipath TCP connections {[}\hyperlink{cite.biblio:id8941}{17}{]}. This does not prevent servers from supporting large numbers of Multipath TCP connections {[}\hyperlink{cite.biblio:id9001}{18}{]}.
+From a security viewpoint, the keys that Multipath TCP hosts exchange in the \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option should be completely random to prevent them from being guessed by attackers. However, since the token is derived from the key, it cannot be completely random. A host will typically generate a random key and hash it into a token to verify that it does not correspond to an existing connection. On clients, with a few tens of connections, this is not a concern, but on servers, the delay to generate random keys increases with the number of established Multipath TCP connections {[}\hyperlink{cite.biblio:id8941}{23}{]}. This does not prevent servers from supporting large numbers of Multipath TCP connections {[}\hyperlink{cite.biblio:id9001}{24}{]}.
 \end{sphinxadmonition}
 
 \sphinxAtStartPar
@@ -2286,25 +2518,25 @@ figure from slide
 \subsection{LIA}
 \label{\detokenize{mptcp:lia}}
 \sphinxAtStartPar
-{[}\hyperlink{cite.biblio:id8932}{19}{]} and {[}\hyperlink{cite.biblio:id6203}{20}{]}
+{[}\hyperlink{cite.biblio:id8932}{25}{]} and {[}\hyperlink{cite.biblio:id6203}{26}{]}
 
 
 \subsection{OLIA}
 \label{\detokenize{mptcp:olia}}
 \sphinxAtStartPar
-{[}\hyperlink{cite.biblio:id8951}{21}{]}
+{[}\hyperlink{cite.biblio:id8951}{27}{]}
 
 
 \subsection{BALIA}
 \label{\detokenize{mptcp:balia}}
 \sphinxAtStartPar
-{[}\hyperlink{cite.biblio:id8993}{22}{]}
+{[}\hyperlink{cite.biblio:id8993}{28}{]}
 
 
 \subsection{MPCC}
 \label{\detokenize{mptcp:mpcc}}
 \sphinxAtStartPar
-{[}\hyperlink{cite.biblio:id9002}{23}{]}
+{[}\hyperlink{cite.biblio:id9002}{29}{]}
 
 
 \section{Connection release}
@@ -2332,7 +2564,7 @@ A TCP connection starts with a three\sphinxhyphen{}way handshake and ends with e
 \draw[red,thick, ->] (\c2,\y-5.5) -- (\s1,\y-6.5) node [midway, align=left, fill=white] {ACK [ack=w+1]\small{DS[a=z+2]}};
 \end{tikzpicture}\caption{Graceful termination of a Multipath TCP connection}\label{\detokenize{mptcp:id73}}\label{\detokenize{mptcp:fig-mptcp-close}}\end{figure}
 \sphinxAtStartPar
-The main drawback of exchanging \sphinxcode{\sphinxupquote{DATA\_FINs}} to terminate a Multipath TCP is that this takes time. Busy servers might not be willing to spend a long time waiting for the exchange of all these packets if the application already guarantees the correct delivery of the data. A regular TCP server would send a \sphinxcode{\sphinxupquote{RST}} packet to quickly terminate such a connection. However, such \sphinxcode{\sphinxupquote{RST}} packets can lead to denial of service attacks {[}\hyperlink{cite.biblio:id5818}{24}{]}. A regular TCP receiver mitigates these attacks by checking the sequence number of the \sphinxcode{\sphinxupquote{RST}} packet {[}\hyperlink{cite.biblio:id5558}{25}{]}. The Multipath TCP designers did not consider this approach to be safe since an attacker who is able to observe the packets on one path could send a \sphinxcode{\sphinxupquote{RST}} packet that would terminate all the subflows used by the connection.
+The main drawback of exchanging \sphinxcode{\sphinxupquote{DATA\_FINs}} to terminate a Multipath TCP is that this takes time. Busy servers might not be willing to spend a long time waiting for the exchange of all these packets if the application already guarantees the correct delivery of the data. A regular TCP server would send a \sphinxcode{\sphinxupquote{RST}} packet to quickly terminate such a connection. However, such \sphinxcode{\sphinxupquote{RST}} packets can lead to denial of service attacks {[}\hyperlink{cite.biblio:id5818}{30}{]}. A regular TCP receiver mitigates these attacks by checking the sequence number of the \sphinxcode{\sphinxupquote{RST}} packet {[}\hyperlink{cite.biblio:id5558}{31}{]}. The Multipath TCP designers did not consider this approach to be safe since an attacker who is able to observe the packets on one path could send a \sphinxcode{\sphinxupquote{RST}} packet that would terminate all the subflows used by the connection.
 
 \sphinxAtStartPar
 To still allow a host to quickly terminate a Multipath TCP connection, Multipath TCP must be able to verify the validity of a packet that terminates a connection. For this, Multipath TCP defines the \sphinxcode{\sphinxupquote{FAST\_CLOSE}} option that includes a 64 bits security key. These keys are exchanged during the initial handshake and included in the state associated to a Multipath TCP connection. To quickly close a connection, a host simply needs to send the key of the remote host in a \sphinxcode{\sphinxupquote{FAST\_CLOSE}} option sent over one of the active subflows. The Multipath TCP specification defines two different methods to use the \sphinxcode{\sphinxupquote{FAST\_CLOSE}} option.
@@ -2373,10 +2605,10 @@ The first solution is to send the \sphinxcode{\sphinxupquote{FAST\_CLOSE}} optio
 \section{Coping with middlebox interference}
 \label{\detokenize{mptcp:coping-with-middlebox-interference}}\label{\detokenize{mptcp:mptcp-middlebox}}
 \sphinxAtStartPar
-The previous sections have explained how Multipath TCP operates at a high level. They assume a simple network that is mainly composed of hosts, switches and routers. TCP and Multipath TCP are used by the hosts. They rely on IP packets that contain the TCP segments. These packets are forwarded by IP routers and possibly switches at layer\sphinxhyphen{}2 before reaching their final destination. In a network that uses layered protocols, the switches only inspect the layer\sphinxhyphen{}2 headers, the routers only read and change the layer\sphinxhyphen{}2 and layer\sphinxhyphen{}3 headers. Neither the switches nor the routers read or modify the payload of the packets that they forward. Unfortunately, this assumption is not true on the global Internet and in enterprise networks. Besides switches and routers, these networks contains other types of equipment that process packets {[}\hyperlink{cite.biblio:id8916}{26}{]}. These devices are usually called middleboxes because they reside in the middle of the network and process packets in different ways. A detailed survey of all the different types of middleboxes is outside the scope of this document. We discuss below some of the popular middleboxes and analyze how they have influenced the design of Multipath TCP.
+The previous sections have explained how Multipath TCP operates at a high level. They assume a simple network that is mainly composed of hosts, switches and routers. TCP and Multipath TCP are used by the hosts. They rely on IP packets that contain the TCP segments. These packets are forwarded by IP routers and possibly switches at layer\sphinxhyphen{}2 before reaching their final destination. In a network that uses layered protocols, the switches only inspect the layer\sphinxhyphen{}2 headers, the routers only read and change the layer\sphinxhyphen{}2 and layer\sphinxhyphen{}3 headers. Neither the switches nor the routers read or modify the payload of the packets that they forward. Unfortunately, this assumption is not true on the global Internet and in enterprise networks. Besides switches and routers, these networks contains other types of equipment that process packets {[}\hyperlink{cite.biblio:id8916}{32}{]}. These devices are usually called middleboxes because they reside in the middle of the network and process packets in different ways. A detailed survey of all the different types of middleboxes is outside the scope of this document. We discuss below some of the popular middleboxes and analyze how they have influenced the design of Multipath TCP.
 
 \sphinxAtStartPar
-Our first middlebox is a firewall. A firewall is a device that receives packets, analyzes their contents and then forwards or blocks the packet. The simplest firewalls are the stateless firewalls that accept or reject each individual packet. Such a firewall can accept packet based on the source or destination addresses or port numbers. Some firewalls also check the flags or the IP header or reassemble the received packet fragments. Others analyze the TCP header and verify the utilization of the TCP options. A firewall can be configured using a white list or a black list. A white list specifies all the packet fields that are valid and all the others are invalid. On the other hand, a black list specifies the packets that must be rejected by the firewall and all the others are accepted. Many firewalls use a small white list that defines the TCP options that the firewall accepts. This list typically includes the widely deployed options such as MSS {[}\hyperlink{cite.biblio:id729}{2}{]}, timestamps {[}\hyperlink{cite.biblio:id7140}{27}{]}, windows scale {[}\hyperlink{cite.biblio:id1245}{28}{]} and selective acknowledgments {[}\hyperlink{cite.biblio:id1948}{1}{]}. TCP options are encoded using the Kind, Length, Value format shown in \hyperref[\detokenize{mptcp:fig-mptcp-tcp-option}]{Fig.\@ \ref{\detokenize{mptcp:fig-mptcp-tcp-option}}}.
+Our first middlebox is a firewall. A firewall is a device that receives packets, analyzes their contents and then forwards or blocks the packet. The simplest firewalls are the stateless firewalls that accept or reject each individual packet. Such a firewall can accept packet based on the source or destination addresses or port numbers. Some firewalls also check the flags or the IP header or reassemble the received packet fragments. Others analyze the TCP header and verify the utilization of the TCP options. A firewall can be configured using a white list or a black list. A white list specifies all the packet fields that are valid and all the others are invalid. On the other hand, a black list specifies the packets that must be rejected by the firewall and all the others are accepted. Many firewalls use a small white list that defines the TCP options that the firewall accepts. This list typically includes the widely deployed options such as MSS {[}\hyperlink{cite.biblio:id729}{4}{]}, timestamps {[}\hyperlink{cite.biblio:id7140}{33}{]}, windows scale {[}\hyperlink{cite.biblio:id1245}{34}{]} and selective acknowledgments {[}\hyperlink{cite.biblio:id1948}{12}{]}. TCP options are encoded using the Kind, Length, Value format shown in \hyperref[\detokenize{mptcp:fig-mptcp-tcp-option}]{Fig.\@ \ref{\detokenize{mptcp:fig-mptcp-tcp-option}}}.
 \begin{figure}[htbp]\centering\capstart\begin{tikzpicture}
 \node (A) at (0,0) {
 \begin{bytefield}{32}
@@ -2385,10 +2617,10 @@ Our first middlebox is a firewall. A firewall is a device that receives packets,
 };
 \end{tikzpicture}\caption{Generic format for TCP options}\label{\detokenize{mptcp:id76}}\label{\detokenize{mptcp:fig-mptcp-tcp-option}}\end{figure}
 \sphinxAtStartPar
-It is interesting to explore how such a firewall reacts when it receives a packet containing a TCP option that is not part of its whitelist. There are two possibilities. Some firewalls simply drop the packet, but this blocks a connection that could be totally legitimate. Other firewalls remove the option from the TCP header. This can be done by either removing the bytes that contain the unknown TCP option, adjust the Length field of the IP header, the TCP Header length (and possibly update the padding) and update the TCP checksum. A simpler approach is to replace the bytes of the option with byte \sphinxcode{\sphinxupquote{1}}. This corresponds to the standard No\sphinxhyphen{}Operation TCP option {[}\hyperlink{cite.biblio:id729}{2}{]}. The advantage of this approach is that the firewall only has to recompute the TCP checksum and does not need to adjust the packet length and move data.
+It is interesting to explore how such a firewall reacts when it receives a packet containing a TCP option that is not part of its whitelist. There are two possibilities. Some firewalls simply drop the packet, but this blocks a connection that could be totally legitimate. Other firewalls remove the option from the TCP header. This can be done by either removing the bytes that contain the unknown TCP option, adjust the Length field of the IP header, the TCP Header length (and possibly update the padding) and update the TCP checksum. A simpler approach is to replace the bytes of the option with byte \sphinxcode{\sphinxupquote{1}}. This corresponds to the standard No\sphinxhyphen{}Operation TCP option {[}\hyperlink{cite.biblio:id729}{4}{]}. The advantage of this approach is that the firewall only has to recompute the TCP checksum and does not need to adjust the packet length and move data.
 
 \sphinxAtStartPar
-The removal of TCP options by firewalls has influenced the design of Multipath TCP. Multipath TCP uses TCP options to exchange different types of information. The information carried in a \sphinxcode{\sphinxupquote{SYN}} is not the same as the one exchanged in data packets. The selective acknowledgments TCP extension {[}\hyperlink{cite.biblio:id1948}{1}{]} defines two different options: a two bytes long \sphinxcode{\sphinxupquote{SACK permitted}} that is used inside \sphinxcode{\sphinxupquote{SYN}} and a variable length \sphinxcode{\sphinxupquote{SACK}} option that carries the selective acknowledgments during the data transfer. The first versions of Multipath TCP used a similar approach with different TCP options kinds. However, the Multipath TCP designers feared that some firewalls could accept some of the Multipath TCP options and drop the others. For example, the Multipath TCP option used in the \sphinxcode{\sphinxupquote{SYN}} could pass a firewall that would later drop the options used in data packets. It would have been very difficult for a Multipath TCP implementation to deal with all the corner cases that could happen since Multipath TCP {[}\hyperlink{cite.biblio:id8500}{5}{]} currently defines 9 different options. To prevent such problems, Multipath TCP uses a single TCP option kind and each Multipath TCP option contains a subtype field. This increases the length of the Multipath TCP options, but minimizes the risk of middlebox interference.
+The removal of TCP options by firewalls has influenced the design of Multipath TCP. Multipath TCP uses TCP options to exchange different types of information. The information carried in a \sphinxcode{\sphinxupquote{SYN}} is not the same as the one exchanged in data packets. The selective acknowledgments TCP extension {[}\hyperlink{cite.biblio:id1948}{12}{]} defines two different options: a two bytes long \sphinxcode{\sphinxupquote{SACK permitted}} that is used inside \sphinxcode{\sphinxupquote{SYN}} and a variable length \sphinxcode{\sphinxupquote{SACK}} option that carries the selective acknowledgments during the data transfer. The first versions of Multipath TCP used a similar approach with different TCP options kinds. However, the Multipath TCP designers feared that some firewalls could accept some of the Multipath TCP options and drop the others. For example, the Multipath TCP option used in the \sphinxcode{\sphinxupquote{SYN}} could pass a firewall that would later drop the options used in data packets. It would have been very difficult for a Multipath TCP implementation to deal with all the corner cases that could happen since Multipath TCP {[}\hyperlink{cite.biblio:id8500}{15}{]} currently defines 9 different options. To prevent such problems, Multipath TCP uses a single TCP option kind and each Multipath TCP option contains a subtype field. This increases the length of the Multipath TCP options, but minimizes the risk of middlebox interference.
 \begin{figure}[htbp]\centering\capstart\begin{tikzpicture}
 \node (A) at (0,0)  {
 \begin{bytefield}{32}
@@ -2443,7 +2675,7 @@ A router will never change any other field of the IP header and will not read th
 Today, most TCP stacks set the Don’t Fragment flag when sending TCP packets. This implies that IPv4 routers will not fragment the packet. Even if a router fragments an IPv4 packet, this is transparent for the TCP stack since the IP stack on the receiver will reassemble the packet before passing its contents to TCP.
 
 \sphinxAtStartPar
-Unfortunately, deployed networks also contain Network Address Translators (NAT) {[}\hyperlink{cite.biblio:id2952}{29}{]}. We consider three different types of NATs because they interfere in different ways with TCP extensions such as Multipath TCP. A NAT is usually located at the boundary between a private network and the Internet. The hosts of the private network use private IP addresses {[}\hyperlink{cite.biblio:id1848}{30}{]} and the NAT is configured with a pool of public addresses. When the NAT receives an IP packet from a host in the private network, its maps the source IP address to a public one and rewrites the packet before forwarding it to the public Internet. When the NAT receives a packet from the Internet, it checks if there is a mapping for the packet’s destination address. If so, the destination address is translated and the packet is forwarded to the private host.
+Unfortunately, deployed networks also contain Network Address Translators (NAT) {[}\hyperlink{cite.biblio:id2952}{35}{]}. We consider three different types of NATs because they interfere in different ways with TCP extensions such as Multipath TCP. A NAT is usually located at the boundary between a private network and the Internet. The hosts of the private network use private IP addresses {[}\hyperlink{cite.biblio:id1848}{36}{]} and the NAT is configured with a pool of public addresses. When the NAT receives an IP packet from a host in the private network, its maps the source IP address to a public one and rewrites the packet before forwarding it to the public Internet. When the NAT receives a packet from the Internet, it checks if there is a mapping for the packet’s destination address. If so, the destination address is translated and the packet is forwarded to the private host.
 \begin{figure}[htbp]\centering\capstart\begin{tikzpicture}
 \node (A) at (0,0)  {
 \definecolor{lightred}{rgb}{1,0.7,0.71}
@@ -2463,13 +2695,13 @@ Unfortunately, deployed networks also contain Network Address Translators (NAT) 
 };
 \end{tikzpicture}\caption{Fields of an IPv4 packet carrying a TCP segment which can be modified by a simple NAT}\label{\detokenize{mptcp:id79}}\label{\detokenize{mptcp:fig-mptcp-ip4tcp-nat}}\end{figure}
 \sphinxAtStartPar
-As illustrated in \hyperref[\detokenize{mptcp:fig-mptcp-ip4tcp-nat}]{Fig.\@ \ref{\detokenize{mptcp:fig-mptcp-ip4tcp-nat}}}, this NAT updates the source or destination address of the packet depending on the packet direction. This modification forces the NAT to recompute the IP checksum but also the TCP checksum since it covers the TCP packet and a pseudo header that includes the IP addresses {[}\hyperlink{cite.biblio:id729}{2}{]}. In practice, these two checksums are incrementally updated {[}\hyperlink{cite.biblio:id2952}{29}{]} and do not need to be recomputed.
+As illustrated in \hyperref[\detokenize{mptcp:fig-mptcp-ip4tcp-nat}]{Fig.\@ \ref{\detokenize{mptcp:fig-mptcp-ip4tcp-nat}}}, this NAT updates the source or destination address of the packet depending on the packet direction. This modification forces the NAT to recompute the IP checksum but also the TCP checksum since it covers the TCP packet and a pseudo header that includes the IP addresses {[}\hyperlink{cite.biblio:id729}{4}{]}. In practice, these two checksums are incrementally updated {[}\hyperlink{cite.biblio:id2952}{35}{]} and do not need to be recomputed.
 
 \sphinxAtStartPar
 Multipath TCP copes with these NATs by associating an identifier to each address that is used to create a subflow or advertise an address using the \sphinxcode{\sphinxupquote{ADD\_ADDR}} option. NAT are not aware of these identifiers and they do not modify them. The \sphinxcode{\sphinxupquote{REMOVE\_ADDR}} option only contains the identifier of the address that was removed. With this information, the receiver of the option can easily determine the affected subflows.
 
 \sphinxAtStartPar
-Most NAT deployments, in particular with IPv4, use a pool a public addresses that is much smaller than the set of private addresses that need to be mapped. These middleboxes also need to translate the source ports used by the internal hosts to map different private addresses to the same public addresses. These Network Address and Port Translators (NAPT) also modify the source or destination ports in the same way as they modify the addresses. Multipath TCP copes with simple NAPTs as with simple NATs. Unfortunately, most NATs and NAPTs also include Application\sphinxhyphen{}Level Gateways (ALG). ALGs were designed to enable applications such as the File Transfer Protocol (FTP) {[}\hyperlink{cite.biblio:id894}{31}{]} to be used through NATs and NAPTs. FTP and a few other protocols use IP addresses as parameters of the application\sphinxhyphen{}level messages that are exchanged within the bytestream. A simple FTP session is shown in \hyperref[\detokenize{mptcp:fig-mptcp-ftp}]{Listing \ref{\detokenize{mptcp:fig-mptcp-ftp}}}. In contrast with many application\sphinxhyphen{}level protocols, FTP uses several TCP connection. A FTP sessions starts with a TCP connection established by the client. This connection is called the control connection {[}\hyperlink{cite.biblio:id894}{31}{]}. This connection is used to exchange simple commands and the associated responses. The client issues commands such as \sphinxcode{\sphinxupquote{USER}} (to indicate the client username) or \sphinxcode{\sphinxupquote{PASS}} (to provide a password) as a single ASCII line sent over this connection. The server replies with one line that starts with a decimal number that indicates the success of the failure of the command and a textual explanation. However, this is not the only connection used between the client and the server. The client and the server also use data connections. If the client wants to retrieve a file or simply list the names of the files in a given directory, it needs to issue two successive commands. The first command (\sphinxcode{\sphinxupquote{PORT}}) indicates the data connection that will be used to exchange the result of the subsequent command. The client listens on a local port and provides its IP address and port number as parameters of the \sphinxcode{\sphinxupquote{PORT}} command. Upon reception of this command, the server establish a TCP connection towards the port specific by the client. If the client is behind a NAT, its private IP address and the local port must be translated by the NAT to support the establishment of a server\sphinxhyphen{}initiated connection.
+Most NAT deployments, in particular with IPv4, use a pool a public addresses that is much smaller than the set of private addresses that need to be mapped. These middleboxes also need to translate the source ports used by the internal hosts to map different private addresses to the same public addresses. These Network Address and Port Translators (NAPT) also modify the source or destination ports in the same way as they modify the addresses. Multipath TCP copes with simple NAPTs as with simple NATs. Unfortunately, most NATs and NAPTs also include Application\sphinxhyphen{}Level Gateways (ALG). ALGs were designed to enable applications such as the File Transfer Protocol (FTP) {[}\hyperlink{cite.biblio:id894}{37}{]} to be used through NATs and NAPTs. FTP and a few other protocols use IP addresses as parameters of the application\sphinxhyphen{}level messages that are exchanged within the bytestream. A simple FTP session is shown in \hyperref[\detokenize{mptcp:fig-mptcp-ftp}]{Listing \ref{\detokenize{mptcp:fig-mptcp-ftp}}}. In contrast with many application\sphinxhyphen{}level protocols, FTP uses several TCP connection. A FTP sessions starts with a TCP connection established by the client. This connection is called the control connection {[}\hyperlink{cite.biblio:id894}{37}{]}. This connection is used to exchange simple commands and the associated responses. The client issues commands such as \sphinxcode{\sphinxupquote{USER}} (to indicate the client username) or \sphinxcode{\sphinxupquote{PASS}} (to provide a password) as a single ASCII line sent over this connection. The server replies with one line that starts with a decimal number that indicates the success of the failure of the command and a textual explanation. However, this is not the only connection used between the client and the server. The client and the server also use data connections. If the client wants to retrieve a file or simply list the names of the files in a given directory, it needs to issue two successive commands. The first command (\sphinxcode{\sphinxupquote{PORT}}) indicates the data connection that will be used to exchange the result of the subsequent command. The client listens on a local port and provides its IP address and port number as parameters of the \sphinxcode{\sphinxupquote{PORT}} command. Upon reception of this command, the server establish a TCP connection towards the port specific by the client. If the client is behind a NAT, its private IP address and the local port must be translated by the NAT to support the establishment of a server\sphinxhyphen{}initiated connection.
 \sphinxSetupCaptionForVerbatim{Simple ftp session}
 \def\sphinxLiteralBlockLabel{\label{\detokenize{mptcp:fig-mptcp-ftp}}}
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
@@ -2566,7 +2798,7 @@ The \sphinxcode{\sphinxupquote{PORT 192,168,0,37,133,67}} indicates that the cli
 As shown by the example above, an ALG can change bytes in the bytestream. It can also remove bytes from the bytestream and also add bytes in the bytestream. This happens notably when the ASCII representation of the public IP address of the NAT is longer than the private IP address of the internal host. This modification of the bytestream had a major impact on the design of Multipath TCP. It mainly affects the Data Sequence Number option that carries the data sequence numbers and acknowledgments. To detect modifications from ALGs and other middleboxes, this option covers a range of sequence numbers in the bytestream and includes an optional checksum that is computed by the Multipath TCP sender and checked by the receiver. If there is a mismatch between the checksum of the option and the data, the receiver stops using Multipath TCP and falls back to regular TCP to preserve the established connection. We discuss this fallback in more details later.
 
 \sphinxAtStartPar
-Our third type of middlebox that splits or coalesces TCP packets. This is not a router that performs IPv4 fragmentation or a host that splits a large IPv6 packets in fragments. In\sphinxhyphen{}network fragmentation is mainly disabled in IPv4 network since modern TCP stacks set the \sphinxcode{\sphinxupquote{DF}} flag of the IP header. Those middleboxes do not reside in the middle of the network. They are typically included in the network adapter used by servers and even client hosts. Measurement studies have shown that hosts can reach a higher throughput when sending and receiving large packets. For example, a recent study {[}\hyperlink{cite.biblio:id8923}{32}{]} reveals that over a 100 Gbps interface, a server was able to reach 25 Gbps with a single TCP connection using 1500 bytes packets. The same connection reached 40 Gbps by using jumbo frames, i.e. 9000 bytes packets. The jumbo frames are supported on modern Gigabit Ethernet networks but they are rarely used outside datacenters because most Internet paths still only supports 1500 bytes packets.
+Our third type of middlebox that splits or coalesces TCP packets. This is not a router that performs IPv4 fragmentation or a host that splits a large IPv6 packets in fragments. In\sphinxhyphen{}network fragmentation is mainly disabled in IPv4 network since modern TCP stacks set the \sphinxcode{\sphinxupquote{DF}} flag of the IP header. Those middleboxes do not reside in the middle of the network. They are typically included in the network adapter used by servers and even client hosts. Measurement studies have shown that hosts can reach a higher throughput when sending and receiving large packets. For example, a recent study {[}\hyperlink{cite.biblio:id8923}{38}{]} reveals that over a 100 Gbps interface, a server was able to reach 25 Gbps with a single TCP connection using 1500 bytes packets. The same connection reached 40 Gbps by using jumbo frames, i.e. 9000 bytes packets. The jumbo frames are supported on modern Gigabit Ethernet networks but they are rarely used outside datacenters because most Internet paths still only supports 1500 bytes packets.
 
 \sphinxAtStartPar
 Modern network adapters support TCP Segmentation Offload (TSO) to improve the throughput of TCP connection are reduce the CPU load. In a nutshell, when TSO is enabled, the network adapter exposes a large maximum packet size, e.g. 16 KBytes to more, to the network stack. When the host sends such a large packet, it is automatically segmented in a sequence of small IP packets. On the receiver side, the network adapter performs the reverse operation. It coalesces small received packets into a larger one. \hyperref[\detokenize{mptcp:fig-mptcp-tso}]{Fig.\@ \ref{\detokenize{mptcp:fig-mptcp-tso}}} shows a large (2 KBytes long) TCP packet. It is interesting to analyze how the key fields of this packet will be processed by TSO to segment it in the two smaller packets.
@@ -2596,7 +2828,7 @@ Modern network adapters support TCP Segmentation Offload (TSO) to improve the th
 \end{tikzpicture}\caption{A large IP packet containing TCP header and data}\label{\detokenize{mptcp:id82}}\label{\detokenize{mptcp:fig-mptcp-tso}}\end{figure}
 \sphinxAtStartPar
 To segment the packet shown in \hyperref[\detokenize{mptcp:fig-mptcp-tso}]{Fig.\@ \ref{\detokenize{mptcp:fig-mptcp-tso}}} in two smaller packets, TSO creates two \sphinxcode{\sphinxupquote{1040}} bytes long IPv4 packets. The two small packets have a different IP Identification than the large one. TSO computes an IP checksum for each small packet. It then copies the TCP header of the large packet in both small ones, but with a fed adjustments. The sequence number of the  first small packet is the same as the large one. The sequence number of the sequence small packet is the one of the first packet increased by 1000.
-Concerning the TCP options, TSO could analyze the contents of the option and handle each option in a specific manner. For example, TSO could adjust the TCP timestamp option of successive packets. In practice, measurements indicate that TSO simply copies the TCP options field of the large packet in all small packets {[}\hyperlink{cite.biblio:id8938}{33}{]}. TSO places the first 1000 bytes of the payload of the large packet in the first small one and the last 1000 bytes in the second one. Finally, TSO needs to update the TCP checksum in all the small packets.
+Concerning the TCP options, TSO could analyze the contents of the option and handle each option in a specific manner. For example, TSO could adjust the TCP timestamp option of successive packets. In practice, measurements indicate that TSO simply copies the TCP options field of the large packet in all small packets {[}\hyperlink{cite.biblio:id8938}{39}{]}. TSO places the first 1000 bytes of the payload of the large packet in the first small one and the last 1000 bytes in the second one. Finally, TSO needs to update the TCP checksum in all the small packets.
 
 \sphinxAtStartPar
 The receiver side of these network adapters implement Large Receive Offload (LRO). This basically coalesces the packets that were segmented by TSO. In this case, coalescing packets that carry different TCP options could be problematic since some of the TCP options would be lost in this process. Measurements with different TCP options show that LRO only coalesces packets that have exactly the same set of TCP implementations.
@@ -2752,103 +2984,121 @@ The receiver side of these network adapters implement Large Receive Offload (LRO
 \end{itemize}
 
 \begin{sphinxthebibliography}{10}
-\bibitem[1]{biblio:id1948}
+\bibitem[1]{biblio:id704}
 \sphinxAtStartPar
-M. Mathis, J. Mahdavi, S. Floyd, and A. Romanow. TCP Selective Acknowledgment Options. RFC 2018 (Proposed Standard), October 1996. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc2018.txt}, \sphinxhref{https://doi.org/10.17487/RFC2018}{doi:10.17487/RFC2018}.
-\bibitem[2]{biblio:id729}
+J. Postel. User Datagram Protocol. RFC 768 (Internet Standard), August 1980. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc768.txt}, \sphinxhref{https://doi.org/10.17487/RFC0768}{doi:10.17487/RFC0768}.
+\bibitem[2]{biblio:id3471}
+\sphinxAtStartPar
+H. Schulzrinne, S. Casner, R. Frederick, and V. Jacobson. RTP: A Transport Protocol for Real\sphinxhyphen{}Time Applications. RFC 3550 (Internet Standard), July 2003. Updated by RFCs 5506, 5761, 6051, 6222, 7022, 7160, 7164, 8083, 8108, 8860. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc3550.txt}, \sphinxhref{https://doi.org/10.17487/RFC3550}{doi:10.17487/RFC3550}.
+\bibitem[3]{biblio:id4244}
+\sphinxAtStartPar
+E. Kohler, M. Handley, and S. Floyd. Datagram Congestion Control Protocol (DCCP). RFC 4340 (Proposed Standard), March 2006. Updated by RFCs 5595, 5596, 6335, 6773. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc4340.txt}, \sphinxhref{https://doi.org/10.17487/RFC4340}{doi:10.17487/RFC4340}.
+\bibitem[4]{biblio:id729}
 \sphinxAtStartPar
 J. Postel. Transmission Control Protocol. RFC 793 (Internet Standard), September 1981. Updated by RFCs 1122, 3168, 6093, 6528. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc793.txt}, \sphinxhref{https://doi.org/10.17487/RFC0793}{doi:10.17487/RFC0793}.
-\bibitem[3]{biblio:id831}
-\sphinxAtStartPar
-J. Nagle. Congestion Control in IP/TCP Internetworks. RFC 896 (Historic), January 1984. Obsoleted by RFC 7805. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc896.txt}, \sphinxhref{https://doi.org/10.17487/RFC0896}{doi:10.17487/RFC0896}.
-\bibitem[4]{biblio:id6147}
-\sphinxAtStartPar
-V. Paxson, M. Allman, J. Chu, and M. Sargent. Computing TCP\textquotesingle{}s Retransmission Timer. RFC 6298 (Proposed Standard), June 2011. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6298.txt}, \sphinxhref{https://doi.org/10.17487/RFC6298}{doi:10.17487/RFC6298}.
-\bibitem[5]{biblio:id8500}
-\sphinxAtStartPar
-A. Ford, C. Raiciu, M. Handley, O. Bonaventure, and C. Paasch. TCP Extensions for Multipath Operation with Multiple Addresses. RFC 8684 (Proposed Standard), March 2020. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc8684.txt}, \sphinxhref{https://doi.org/10.17487/RFC8684}{doi:10.17487/RFC8684}.
-\bibitem[6]{biblio:id6658}
-\sphinxAtStartPar
-A. Ford, C. Raiciu, M. Handley, and O. Bonaventure. TCP Extensions for Multipath Operation with Multiple Addresses. RFC 6824 (Experimental), January 2013. Obsoleted by RFC 8684. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6824.txt}, \sphinxhref{https://doi.org/10.17487/RFC6824}{doi:10.17487/RFC6824}.
-\bibitem[7]{biblio:id2922}
-\sphinxAtStartPar
-C. Hopps. Analysis of an Equal\sphinxhyphen{}Cost Multi\sphinxhyphen{}Path Algorithm. RFC 2992 (Informational), November 2000. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc2992.txt}, \sphinxhref{https://doi.org/10.17487/RFC2992}{doi:10.17487/RFC2992}.
-\bibitem[8]{biblio:id6033}
-\sphinxAtStartPar
-A. Ford, C. Raiciu, M. Handley, S. Barre, and J. Iyengar. Architectural Guidelines for Multipath TCP Development. RFC 6182 (Informational), March 2011. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6182.txt}, \sphinxhref{https://doi.org/10.17487/RFC6182}{doi:10.17487/RFC6182}.
-\bibitem[9]{biblio:id8227}
-\sphinxAtStartPar
-C. Filsfils (Ed.), S. Previdi (Ed.), L. Ginsberg, B. Decraene, S. Litkowski, and R. Shakir. Segment Routing Architecture. RFC 8402 (Proposed Standard), July 2018. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc8402.txt}, \sphinxhref{https://doi.org/10.17487/RFC8402}{doi:10.17487/RFC8402}.
-\bibitem[10]{biblio:id8570}
-\sphinxAtStartPar
-C. Filsfils (Ed.), D. Dukes (Ed.), S. Previdi, J. Leddy, S. Matsushima, and D. Voyer. IPv6 Segment Routing Header (SRH). RFC 8754 (Proposed Standard), March 2020. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc8754.txt}, \sphinxhref{https://doi.org/10.17487/RFC8754}{doi:10.17487/RFC8754}.
-\bibitem[11]{biblio:id8933}
-\sphinxAtStartPar
-C. Raiciu, S. Barre, C. Pluntke, A. Greenhalgh, D. Wischik, and M. Handley. Improving Datacenter Performance and Robustness with Multipath TCP. In \sphinxstyleemphasis{ACM SIGCOMM 2011}. 2011. URL: \sphinxurl{http://doi.acm.org/10.1145/2018436.2018467}, \sphinxhref{https://doi.org/10.1145/2018436.2018467}{doi:10.1145/2018436.2018467}.
-\bibitem[12]{biblio:id2034}
-\sphinxAtStartPar
-H. Krawczyk, M. Bellare, and R. Canetti. HMAC: Keyed\sphinxhyphen{}Hashing for Message Authentication. RFC 2104 (Informational), February 1997. Updated by RFC 6151. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc2104.txt}, \sphinxhref{https://doi.org/10.17487/RFC2104}{doi:10.17487/RFC2104}.
-\bibitem[13]{biblio:id6032}
-\sphinxAtStartPar
-M. Bagnulo. Threat Analysis for TCP Extensions for Multipath Operation with Multiple Addresses. RFC 6181 (Informational), March 2011. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6181.txt}, \sphinxhref{https://doi.org/10.17487/RFC6181}{doi:10.17487/RFC6181}.
-\bibitem[14]{biblio:id8271}
+\bibitem[5]{biblio:id8271}
 \sphinxAtStartPar
 E. Rescorla. The Transport Layer Security (TLS) Protocol Version 1.3. RFC 8446 (Proposed Standard), August 2018. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc8446.txt}, \sphinxhref{https://doi.org/10.17487/RFC8446}{doi:10.17487/RFC8446}.
-\bibitem[15]{biblio:id1255}
+\bibitem[6]{biblio:id4847}
+\sphinxAtStartPar
+R. Stewart (Ed.). Stream Control Transmission Protocol. RFC 4960 (Proposed Standard), September 2007. Updated by RFCs 6096, 6335, 7053, 8899. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc4960.txt}, \sphinxhref{https://doi.org/10.17487/RFC4960}{doi:10.17487/RFC4960}.
+\bibitem[7]{biblio:id8812}
+\sphinxAtStartPar
+J. Iyengar (Ed.) and M. Thomson (Ed.). QUIC: A UDP\sphinxhyphen{}Based Multiplexed and Secure Transport. RFC 9000 (Proposed Standard), May 2021. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc9000.txt}, \sphinxhref{https://doi.org/10.17487/RFC9000}{doi:10.17487/RFC9000}.
+\bibitem[8]{biblio:id6658}
+\sphinxAtStartPar
+A. Ford, C. Raiciu, M. Handley, and O. Bonaventure. TCP Extensions for Multipath Operation with Multiple Addresses. RFC 6824 (Experimental), January 2013. Obsoleted by RFC 8684. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6824.txt}, \sphinxhref{https://doi.org/10.17487/RFC6824}{doi:10.17487/RFC6824}.
+\bibitem[9]{biblio:id9003}
+\sphinxAtStartPar
+Florian Aschenbrenner, Tanya Shreedhar, Oliver Gasser, Nitinder Mohan, and Jörg Ott. From single lane to highways: analyzing the adoption of multipath tcp in the internet. \sphinxstyleemphasis{arXiv preprint arXiv:2106.07351}, 2021.
+\bibitem[10]{biblio:id8933}
+\sphinxAtStartPar
+C. Raiciu, S. Barre, C. Pluntke, A. Greenhalgh, D. Wischik, and M. Handley. Improving Datacenter Performance and Robustness with Multipath TCP. In \sphinxstyleemphasis{ACM SIGCOMM 2011}. 2011. URL: \sphinxurl{http://doi.acm.org/10.1145/2018436.2018467}, \sphinxhref{https://doi.org/10.1145/2018436.2018467}{doi:10.1145/2018436.2018467}.
+\bibitem[11]{biblio:id2922}
+\sphinxAtStartPar
+C. Hopps. Analysis of an Equal\sphinxhyphen{}Cost Multi\sphinxhyphen{}Path Algorithm. RFC 2992 (Informational), November 2000. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc2992.txt}, \sphinxhref{https://doi.org/10.17487/RFC2992}{doi:10.17487/RFC2992}.
+\bibitem[12]{biblio:id1948}
+\sphinxAtStartPar
+M. Mathis, J. Mahdavi, S. Floyd, and A. Romanow. TCP Selective Acknowledgment Options. RFC 2018 (Proposed Standard), October 1996. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc2018.txt}, \sphinxhref{https://doi.org/10.17487/RFC2018}{doi:10.17487/RFC2018}.
+\bibitem[13]{biblio:id831}
+\sphinxAtStartPar
+J. Nagle. Congestion Control in IP/TCP Internetworks. RFC 896 (Historic), January 1984. Obsoleted by RFC 7805. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc896.txt}, \sphinxhref{https://doi.org/10.17487/RFC0896}{doi:10.17487/RFC0896}.
+\bibitem[14]{biblio:id6147}
+\sphinxAtStartPar
+V. Paxson, M. Allman, J. Chu, and M. Sargent. Computing TCP\textquotesingle{}s Retransmission Timer. RFC 6298 (Proposed Standard), June 2011. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6298.txt}, \sphinxhref{https://doi.org/10.17487/RFC6298}{doi:10.17487/RFC6298}.
+\bibitem[15]{biblio:id8500}
+\sphinxAtStartPar
+A. Ford, C. Raiciu, M. Handley, O. Bonaventure, and C. Paasch. TCP Extensions for Multipath Operation with Multiple Addresses. RFC 8684 (Proposed Standard), March 2020. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc8684.txt}, \sphinxhref{https://doi.org/10.17487/RFC8684}{doi:10.17487/RFC8684}.
+\bibitem[16]{biblio:id6033}
+\sphinxAtStartPar
+A. Ford, C. Raiciu, M. Handley, S. Barre, and J. Iyengar. Architectural Guidelines for Multipath TCP Development. RFC 6182 (Informational), March 2011. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6182.txt}, \sphinxhref{https://doi.org/10.17487/RFC6182}{doi:10.17487/RFC6182}.
+\bibitem[17]{biblio:id8227}
+\sphinxAtStartPar
+C. Filsfils (Ed.), S. Previdi (Ed.), L. Ginsberg, B. Decraene, S. Litkowski, and R. Shakir. Segment Routing Architecture. RFC 8402 (Proposed Standard), July 2018. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc8402.txt}, \sphinxhref{https://doi.org/10.17487/RFC8402}{doi:10.17487/RFC8402}.
+\bibitem[18]{biblio:id8570}
+\sphinxAtStartPar
+C. Filsfils (Ed.), D. Dukes (Ed.), S. Previdi, J. Leddy, S. Matsushima, and D. Voyer. IPv6 Segment Routing Header (SRH). RFC 8754 (Proposed Standard), March 2020. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc8754.txt}, \sphinxhref{https://doi.org/10.17487/RFC8754}{doi:10.17487/RFC8754}.
+\bibitem[19]{biblio:id2034}
+\sphinxAtStartPar
+H. Krawczyk, M. Bellare, and R. Canetti. HMAC: Keyed\sphinxhyphen{}Hashing for Message Authentication. RFC 2104 (Informational), February 1997. Updated by RFC 6151. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc2104.txt}, \sphinxhref{https://doi.org/10.17487/RFC2104}{doi:10.17487/RFC2104}.
+\bibitem[20]{biblio:id6032}
+\sphinxAtStartPar
+M. Bagnulo. Threat Analysis for TCP Extensions for Multipath Operation with Multiple Addresses. RFC 6181 (Informational), March 2011. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6181.txt}, \sphinxhref{https://doi.org/10.17487/RFC6181}{doi:10.17487/RFC6181}.
+\bibitem[21]{biblio:id1255}
 \sphinxAtStartPar
 V. Jacobson, R. Braden, and D. Borman. TCP Extensions for High Performance. RFC 1323 (Proposed Standard), May 1992. Obsoleted by RFC 7323. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc1323.txt}, \sphinxhref{https://doi.org/10.17487/RFC1323}{doi:10.17487/RFC1323}.
-\bibitem[16]{biblio:id6083}
+\bibitem[22]{biblio:id6083}
 \sphinxAtStartPar
 D. Eastlake 3rd and T. Hansen. US Secure Hash Algorithms (SHA and SHA\sphinxhyphen{}based HMAC and HKDF). RFC 6234 (Informational), May 2011. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6234.txt}, \sphinxhref{https://doi.org/10.17487/RFC6234}{doi:10.17487/RFC6234}.
-\bibitem[17]{biblio:id8941}
+\bibitem[23]{biblio:id8941}
 \sphinxAtStartPar
 Costin Raiciu, Christoph Paasch, Sebastien Barre, Alan Ford, Michio Honda, Fabien Duchene, Olivier Bonaventure, and Mark Handley. How hard can it be? Designing and implementing a deployable Multipath TCP. In \sphinxstyleemphasis{Proceedings of the 9th USENIX Conference on Networked Systems Design and Implementation}, NSDI\textquotesingle{}12, 29\textendash{}29. Berkeley, CA, USA, 2012. USENIX Association. URL: \sphinxurl{http://inl.info.ucl.ac.be/publications/how-hard-can-it-be-designing-and-implementing-deployable-multipath-tcp}.
-\bibitem[18]{biblio:id9001}
+\bibitem[24]{biblio:id9001}
 \sphinxAtStartPar
 Nicolas Keukeleire, Benjamin Hesmans, and Olivier Bonaventure. Increasing broadband reach with hybrid access networks. \sphinxstyleemphasis{IEEE Communications Standards Magazine}, 4(1):43\textendash{}49, 2020.
-\bibitem[19]{biblio:id8932}
+\bibitem[25]{biblio:id8932}
 \sphinxAtStartPar
 Damon Wischik, Costin Raiciu, Adam Greenhalgh, and Mark Handley. Design, implementation and evaluation of congestion control for Multipath TCP. In \sphinxstyleemphasis{Proceedings of the 8th USENIX Conference on Networked Systems Design and Implementation}, NSDI\textquotesingle{}11, 99\textendash{}112. Berkeley, CA, USA, 2011. USENIX Association. URL: \sphinxurl{http://dl.acm.org/citation.cfm?id=1972457.1972468}.
-\bibitem[20]{biblio:id6203}
+\bibitem[26]{biblio:id6203}
 \sphinxAtStartPar
 C. Raiciu, M. Handley, and D. Wischik. Coupled Congestion Control for Multipath Transport Protocols. RFC 6356 (Experimental), October 2011. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc6356.txt}, \sphinxhref{https://doi.org/10.17487/RFC6356}{doi:10.17487/RFC6356}.
-\bibitem[21]{biblio:id8951}
+\bibitem[27]{biblio:id8951}
 \sphinxAtStartPar
 R. Khalili, N. Gast, M. Popovic, and J.\sphinxhyphen{}Y. Le Boudec. MPTCP is not pareto\sphinxhyphen{}optimal: performance issues and a possible solution. \sphinxstyleemphasis{Networking, IEEE/ACM Transactions on}, 21(5):1651\textendash{}1665, Oct 2013. \sphinxhref{https://doi.org/10.1109/TNET.2013.2274462}{doi:10.1109/TNET.2013.2274462}.
-\bibitem[22]{biblio:id8993}
+\bibitem[28]{biblio:id8993}
 \sphinxAtStartPar
 Qiuyu Peng, Anwar Walid, Jaehyun Hwang, and Steven H Low. Multipath tcp: analysis, design, and implementation. \sphinxstyleemphasis{IEEE/ACM Transactions on networking}, 24(1):596\textendash{}609, 2014.
-\bibitem[23]{biblio:id9002}
+\bibitem[29]{biblio:id9002}
 \sphinxAtStartPar
 Tomer Gilad, Neta Rozen\sphinxhyphen{}Schiff, P Brighten Godfrey, Costin Raiciu, and Michael Schapira. Mpcc: online learning multipath transport. In \sphinxstyleemphasis{Proceedings of the 16th International Conference on emerging Networking EXperiments and Technologies}, 121\textendash{}135. 2020.
-\bibitem[24]{biblio:id5818}
+\bibitem[30]{biblio:id5818}
 \sphinxAtStartPar
 A. Ramaiah, R. Stewart, and M. Dalal. Improving TCP\textquotesingle{}s Robustness to Blind In\sphinxhyphen{}Window Attacks. RFC 5961 (Proposed Standard), August 2010. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc5961.txt}, \sphinxhref{https://doi.org/10.17487/RFC5961}{doi:10.17487/RFC5961}.
-\bibitem[25]{biblio:id5558}
+\bibitem[31]{biblio:id5558}
 \sphinxAtStartPar
 F. de Bont, S. Doehla, M. Schmidt, and R. Sperschneider. RTP Payload Format for Elementary Streams with MPEG Surround Multi\sphinxhyphen{}Channel Audio. RFC 5691 (Proposed Standard), October 2009. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc5691.txt}, \sphinxhref{https://doi.org/10.17487/RFC5691}{doi:10.17487/RFC5691}.
-\bibitem[26]{biblio:id8916}
+\bibitem[32]{biblio:id8916}
 \sphinxAtStartPar
 Justine Sherry, Shaddi Hasan, Colin Scott, Arvind Krishnamurthy, Sylvia Ratnasamy, and Vyas Sekar. Making middleboxes someone else\textquotesingle{}s problem: network processing as a cloud service. \sphinxstyleemphasis{ACM SIGCOMM Computer Communication Review}, 42(4):13\textendash{}24, 2012.
-\bibitem[27]{biblio:id7140}
+\bibitem[33]{biblio:id7140}
 \sphinxAtStartPar
 K. Patel, E. Chen, and B. Venkatachalapathy. Enhanced Route Refresh Capability for BGP\sphinxhyphen{}4. RFC 7313 (Proposed Standard), July 2014. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc7313.txt}, \sphinxhref{https://doi.org/10.17487/RFC7313}{doi:10.17487/RFC7313}.
-\bibitem[28]{biblio:id1245}
+\bibitem[34]{biblio:id1245}
 \sphinxAtStartPar
 C. Partridge. Today\textquotesingle{}s Programming for KRFC AM 1313 Internet Talk Radio. RFC 1313 (Informational), April 1992. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc1313.txt}, \sphinxhref{https://doi.org/10.17487/RFC1313}{doi:10.17487/RFC1313}.
-\bibitem[29]{biblio:id2952}
+\bibitem[35]{biblio:id2952}
 \sphinxAtStartPar
 P. Srisuresh and K. Egevang. Traditional IP Network Address Translator (Traditional NAT). RFC 3022 (Informational), January 2001. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc3022.txt}, \sphinxhref{https://doi.org/10.17487/RFC3022}{doi:10.17487/RFC3022}.
-\bibitem[30]{biblio:id1848}
+\bibitem[36]{biblio:id1848}
 \sphinxAtStartPar
 Y. Rekhter, B. Moskowitz, D. Karrenberg, G. J. de Groot, and E. Lear. Address Allocation for Private Internets. RFC 1918 (Best Current Practice), February 1996. Updated by RFC 6761. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc1918.txt}, \sphinxhref{https://doi.org/10.17487/RFC1918}{doi:10.17487/RFC1918}.
-\bibitem[31]{biblio:id894}
+\bibitem[37]{biblio:id894}
 \sphinxAtStartPar
 J. Postel and J. Reynolds. File Transfer Protocol. RFC 959 (Internet Standard), October 1985. Updated by RFCs 2228, 2640, 2773, 3659, 5797, 7151. URL: \sphinxurl{https://www.rfc-editor.org/rfc/rfc959.txt}, \sphinxhref{https://doi.org/10.17487/RFC0959}{doi:10.17487/RFC0959}.
-\bibitem[32]{biblio:id8923}
+\bibitem[38]{biblio:id8923}
 \sphinxAtStartPar
 Mario Hock, Maxime Veit, Felix Neumeister, Roland Bless, and Martina Zitterbart. TCP at 100 Gbit/s\textendash{}tuning, limitations, congestion control. In \sphinxstyleemphasis{2019 IEEE 44th Conference on Local Computer Networks (LCN)}, 1\textendash{}9. IEEE, 2019.
-\bibitem[33]{biblio:id8938}
+\bibitem[39]{biblio:id8938}
 \sphinxAtStartPar
 Michio Honda, Yoshifumi Nishida, Costin Raiciu, Adam Greenhalgh, Mark Handley, and Hideyuki Tokuda. Is it still possible to extend TCP? In \sphinxstyleemphasis{Proceedings of the 2011 ACM SIGCOMM Conference on Internet Measurement Conference}, IMC \textquotesingle{}11, 181\textendash{}194. New York, NY, USA, 2011. ACM. URL: \sphinxurl{http://doi.acm.org/10.1145/2068816.2068834}, \sphinxhref{https://doi.org/10.1145/2068816.2068834}{doi:10.1145/2068816.2068834}.
 \end{sphinxthebibliography}

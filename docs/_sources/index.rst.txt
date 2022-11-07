@@ -8,9 +8,12 @@ Multipath TCP
    :maxdepth: 2
    :caption: Contents:
 
+	     
+   usecases
    mptcp-linux
    nstat-intro
    nstat-mptcp
+   mptcp-apple
    tcp
    mptcp
    biblio

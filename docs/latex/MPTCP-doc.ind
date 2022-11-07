@@ -5,17 +5,17 @@
 \let\spxextra \sphinxstyleindexextra
 
   \bigletter C
-  \item \spxentry{Case diagrams}, \hyperpage{19}
+  \item \spxentry{Case diagrams}, \hyperpage{25}
 
   \indexspace
   \bigletter R
   \item \spxentry{RFC}
-    \subitem \spxentry{RFC 1213}, \hyperpage{11}
-    \subitem \spxentry{RFC 2018}, \hyperpage{51}
-    \subitem \spxentry{RFC 4022}, \hyperpage{11}
-    \subitem \spxentry{RFC 4113}, \hyperpage{11}
-    \subitem \spxentry{RFC 4293}, \hyperpage{11}
-    \subitem \spxentry{RFC 6824}, \hyperpage{23}
-    \subitem \spxentry{RFC 8684}, \hyperpage{23}
+    \subitem \spxentry{RFC 1213}, \hyperpage{17}
+    \subitem \spxentry{RFC 2018}, \hyperpage{59}
+    \subitem \spxentry{RFC 4022}, \hyperpage{17}
+    \subitem \spxentry{RFC 4113}, \hyperpage{17}
+    \subitem \spxentry{RFC 4293}, \hyperpage{17}
+    \subitem \spxentry{RFC 6824}, \hyperpage{29}
+    \subitem \spxentry{RFC 8684}, \hyperpage{29}
 
 \end{sphinxtheindex}

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multipath TCP on Apple devices &mdash; Multipath TCP -- documentation 2022 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The Transmission Control Protocol (TCP)" href="tcp.html" />
+    <link rel="prev" title="The Multipath TCP counters" href="nstat-mptcp.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="index.html" class="icon icon-home"> Multipath TCP -- documentation
+            <img src="_static/mptcp-logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                alpha
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mptcp-linux.html">Multipath TCP on recent Linux kernels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nstat-intro.html">Analyzing the output of nstat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nstat-mptcp.html">The Multipath TCP counters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multipath TCP on Apple devices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#multipath-tcp-on-macos-big-sur">Multipath TCP on MacOS Big Sur</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multipath-tcp-on-macos-ventura">Multipath TCP on MacOS Ventura</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-multipath-tcp-support-to-existing-applications">Adding Multipath TCP support to existing applications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multipath-tcp-enabled-applications">Multipath TCP enabled applications</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tcp.html">The Transmission Control Protocol (TCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mptcp.html">Multipath TCP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="biblio.html">Bibliography</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Multipath TCP -- documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Multipath TCP on Apple devices</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/obonaventure/mptcp-doc/blob/mainmptcp-apple.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="multipath-tcp-on-apple-devices">
+<h1>Multipath TCP on Apple devices<a class="headerlink" href="#multipath-tcp-on-apple-devices" title="Permalink to this headline"></a></h1>
+<p><a class="reference external" href="https://www.apple.com">Apple</a> is among the early adopters of Multipath TCP.
+The first implementation appeared in iOS7 in September 2013. The implementation has been refined later and incorporated in MacOS as well. As of 2022, it is likely that iOS, iPadOS and MacOS use the same Multipath TCP implementations.</p>
+<p>Apple does not publish lots of details about the features of its Multipath TCP implementations, but interested readers can explore the source code of recent OS releases.</p>
+<section id="multipath-tcp-on-macos-big-sur">
+<h2>Multipath TCP on MacOS Big Sur<a class="headerlink" href="#multipath-tcp-on-macos-big-sur" title="Permalink to this headline"></a></h2>
+<p>On MacOS, part of the Multipath TCP parameters can be specified using <code class="docutils literal notranslate"><span class="pre">sysctl</span></code> variables. The following variables are supported on Big Sur :</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sysctl -a | grep mptcp</span>
+<span class="go">net.inet.mptcp.dss_csum: 0</span>
+<span class="go">net.inet.mptcp.enable: 1</span>
+<span class="go">net.inet.mptcp.fail: 1</span>
+<span class="go">net.inet.mptcp.keepalive: 840</span>
+<span class="go">net.inet.mptcp.mptcp_cap_retr: 4</span>
+<span class="go">net.inet.mptcp.probecnt: 5</span>
+<span class="go">net.inet.mptcp.probeto: 1000</span>
+<span class="go">net.inet.mptcp.rto_thresh: 1500</span>
+<span class="go">net.inet.mptcp.rtthist_thresh: 600</span>
+<span class="go">net.inet.mptcp.alternate_port: 0</span>
+<span class="go">net.inet.mptcp.dbg_area: 31</span>
+<span class="go">net.inet.mptcp.dbg_level: 1</span>
+<span class="go">net.inet.mptcp.pcbcount: 0</span>
+<span class="go">net.inet.mptcp.allow_aggregate: 0</span>
+<span class="go">net.inet.mptcp.expected_progress_headstart: 5000</span>
+<span class="go">net.inet.mptcp.no_first_party: 0</span>
+<span class="go">net.inet.mptcp.nrto: 3</span>
+<span class="go">net.inet.mptcp.rto: 3</span>
+<span class="go">net.inet.mptcp.tw: 60</span>
+</pre></div>
+</div>
+<p>There is no detailed description of the definition of these <code class="docutils literal notranslate"><span class="pre">sysctl</span></code>
+variables on MacOS, but some can be inferred based on their names and the
+sources of the  <a class="reference external" href="https://github.com/apple-oss-distributions/xnu/tree/main/bsd/netinet">xnu sources</a>.</p>
+<p>The first important <code class="docutils literal notranslate"><span class="pre">sysctl</span></code> variable is <code class="docutils literal notranslate"><span class="pre">net.inet.mptcp.enable</span></code>. It controls whether Multipath TCP is enabled (variable set to <code class="docutils literal notranslate"><span class="pre">1</span></code>, the default) or not.</p>
+<p>The second <code class="docutils literal notranslate"><span class="pre">sysctl</span></code> variable is <code class="docutils literal notranslate"><span class="pre">net.inet.mptcp.dss_csum</span></code>. It controls the utilization of the <code class="docutils literal notranslate"><span class="pre">DSS</span></code> checksum. By default, this checksum is disabled, but it can be enabled if required.</p>
+<p>The third <code class="docutils literal notranslate"><span class="pre">sysctl</span></code> variable, <code class="docutils literal notranslate"><span class="pre">net.inet.mptcp.mptcp_cap_retr</span></code>  probably controls the number of <code class="docutils literal notranslate"><span class="pre">SYN</span></code> with the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option that are sent before removing this option to prevent broken middleboxes from blocking the establishment of Multipath TCP connections. The default value for this parameter is 4.</p>
+<p>The fourth <code class="docutils literal notranslate"><span class="pre">sysctl</span></code> variable, <code class="docutils literal notranslate"><span class="pre">net.inet.mptcp.allow_aggregate</span></code> probably controls whether Multipath TCP can actively use two different subflows to send data. The initial use case for Multipath TCP on Apple devices was mainly failover and the ability to aggregate bandwidth was added later. The default value of this option is <code class="docutils literal notranslate"><span class="pre">0</span></code> which indicates that it is disabled.</p>
+</section>
+<section id="multipath-tcp-on-macos-ventura">
+<h2>Multipath TCP on MacOS Ventura<a class="headerlink" href="#multipath-tcp-on-macos-ventura" title="Permalink to this headline"></a></h2>
+</section>
+<section id="adding-multipath-tcp-support-to-existing-applications">
+<h2>Adding Multipath TCP support to existing applications<a class="headerlink" href="#adding-multipath-tcp-support-to-existing-applications" title="Permalink to this headline"></a></h2>
+<p>Apple exposes some of the Multipath TCP features to applications written in Objective C using the <a class="reference external" href="https://developer.apple.com/documentation/network/2976692-nw_connection_start?language=objc">Network Framework</a>. In particular, the <cite>example &lt;https://developer.apple.com/documentation/network/implementing_netcat_with_network_framework?language=objc&gt;</cite> showing how to implement a <code class="docutils literal notranslate"><span class="pre">netcat</span></code>-like application would useful for application developers.</p>
+</section>
+<section id="multipath-tcp-enabled-applications">
+<h2>Multipath TCP enabled applications<a class="headerlink" href="#multipath-tcp-enabled-applications" title="Permalink to this headline"></a></h2>
+<p>Apple uses Multipath TCP for some of its own applications, notably:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Siri</p></li>
+<li><p>Apple Maps</p></li>
+<li><p>Apple Music</p></li>
+</ul>
+</div></blockquote>
+<p>Third party applications can also use Multipath TCP. These include :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the excellent <a class="reference external" href="https://secureshellfish.app">Secure ShellFish</a> <code class="docutils literal notranslate"><span class="pre">ssh</span></code> client</p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nstat-mptcp.html" class="btn btn-neutral float-left" title="The Multipath TCP counters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tcp.html" class="btn btn-neutral float-right" title="The Transmission Control Protocol (TCP)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Olivier Bonaventure.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
