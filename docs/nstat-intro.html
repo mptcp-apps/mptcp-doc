@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analyzing the output of nstat &mdash; Multipath TCP -- documentation 2022 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The Multipath TCP counters" href="nstat-mptcp.html" />
+    <link rel="prev" title="Multipath TCP on recent Linux kernels" href="mptcp-linux.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="index.html" class="icon icon-home"> Multipath TCP -- documentation
+          </a>
+              <div class="version">
+                alpha
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="mptcp-linux.html">Multipath TCP on recent Linux kernels</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Analyzing the output of nstat</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-nstat">Using nstat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-case-diagrams">The Case diagrams</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nstat-mptcp.html">The Multipath TCP counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcp.html">The Transmission Control Protocol (TCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mptcp.html">Multipath TCP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="biblio.html">Bibliography</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Multipath TCP -- documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Analyzing the output of nstat</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/obonaventure/mptcp-doc/blob/mainnstat-intro.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="analyzing-the-output-of-nstat">
+<h1>Analyzing the output of nstat<a class="headerlink" href="#analyzing-the-output-of-nstat" title="Permalink to this headline"></a></h1>
+<p>The Linux TCP/IP stack maintains a lot of counters that track various
+events inside the kernel. These counters are very useful for system
+administrators who need to manage Linux hosts and debug some specific
+networking problems.</p>
+<p>Linux supports a few hundred counters associated to the protocols in the
+network and transport layers. Other operating systems have defined their
+own counters to track similar networking events. Fortunately, the IETF
+has standard some counters that are common to different operating
+systems and TCP/IP implementations. These counters are exported as
+variables which can be queried using a management protocol such as SNMP.
+This enables a management server to collect statistics for a series of
+hosts to process and analyze them.  Several versions of SNMP exist, but
+we will not discuss them in details in this document. Instead, we
+focus on the Linux TCP/IP implementation and explain the different counters
+that the <a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a>
+application exposes to the user.</p>
+<p>Linux kernel version 5.18 collects 363 different counters that are divided in 7 categories :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>67 counters track the IPv4 implementation</p></li>
+<li><p>80 counters track the ICMPv4 implementation</p></li>
+<li><p>32 counters track the IPv6 implementation</p></li>
+<li><p>46 counters track ICMPv6</p></li>
+<li><p>135 counters track TCP</p></li>
+<li><p>35 counters track UDP</p></li>
+<li><p>46 counters track Multipath TCP</p></li>
+</ul>
+</div></blockquote>
+<p>Some of these counters are part of the Management Information Bases (MIB) defined
+within the IETF, e.g. <span class="target" id="index-0"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc1213.html"><strong>RFC 1213</strong></a> for IPv4 and ICMPv4, <span class="target" id="index-1"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc4293.html"><strong>RFC 4293</strong></a> for IPv6 and ICMPv6,  <span class="target" id="index-2"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc4022.html"><strong>RFC 4022</strong></a> for TCP, <span class="target" id="index-3"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc4113.html"><strong>RFC 4113</strong></a> for UDP. As of this writing, there is no official IETF MIB for Multipath TCP.</p>
+<section id="using-nstat">
+<h2>Using nstat<a class="headerlink" href="#using-nstat" title="Permalink to this headline"></a></h2>
+<p>In this document, we describe the counters that are exposed by
+<a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a>
+for the different protocols of the TCP/IP stack. Before discussing
+these counters, it is useful to understand how
+<a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a> works.</p>
+<p><a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a> is a
+command line tool that supports a small number of arguments</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">nstat --help</span>
+<span class="go">Usage: nstat [OPTION] [ PATTERN [ PATTERN ] ]</span>
+<span class="go">       -h, --help            this message</span>
+<span class="go">       -a, --ignore  ignore history</span>
+<span class="go">       -d, --scan=SECS       sample every statistics every SECS</span>
+<span class="go">       -j, --json            format output in JSON</span>
+<span class="go">       -n, --nooutput        do history only</span>
+<span class="go">       -p, --pretty  pretty print</span>
+<span class="go">       -r, --reset           reset history</span>
+<span class="go">       -s, --noupdate        don&#39;t update history</span>
+<span class="go">       -t, --interval=SECS   report average over the last SECS</span>
+<span class="go">       -V, --version output version information</span>
+<span class="go">       -z, --zeros           show entries with zero activity</span>
+</pre></div>
+</div>
+<p>By default, <a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a>
+displays the counters whose value has changed since the latest invocation
+of the tool. This is usually a small subset of the counters
+that depends on the networking activity of the host.</p>
+<p><a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a> can collect
+historical information and provides average counters.</p>
+<p><a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a> can also list
+the current value of the different counters.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>nstat -az
+<span class="gp">       #</span>kernel
+<span class="go">       IpInReceives                    1073367            0.0</span>
+<span class="go">       IpInHdrErrors                   0                  0.0</span>
+<span class="go">       IpInAddrErrors                  0                  0.0</span>
+<span class="go">       IpForwDatagrams                 0                  0.0</span>
+<span class="go">       IpInUnknownProtos               0                  0.0</span>
+<span class="go">       IpInDiscards                    0                  0.0</span>
+<span class="go">       IpInDelivers                    1072518            0.0</span>
+<span class="go">       IpOutRequests                   484889             0.0</span>
+<span class="go">       IpOutDiscards                   0                  0.0</span>
+<span class="go">       IpOutNoRoutes                   0                  0.0</span>
+<span class="go">       IpReasmTimeout                  0                  0.0</span>
+<span class="go">       IpReasmReqds                    0                  0.0</span>
+<span class="go">       IpReasmOKs                      0                  0.0</span>
+<span class="go">       IpReasmFails                    0                  0.0</span>
+<span class="go">       IpFragOKs                       0                  0.0</span>
+<span class="go">       IpFragFails                     0                  0.0</span>
+<span class="go">       IpFragCreates                   0                  0.0</span>
+<span class="go">       IcmpInMsgs                      561                0.0</span>
+<span class="go">       IcmpInErrors                    125                0.0</span>
+<span class="go">       IcmpInCsumErrors                0                  0.0</span>
+<span class="go">       IcmpInDestUnreachs              6                  0.0</span>
+<span class="go">       IcmpInTimeExcds                 125                0.0</span>
+<span class="go">       IcmpInParmProbs                 0                  0.0</span>
+<span class="go">       IcmpInSrcQuenchs                0                  0.0</span>
+<span class="go">       IcmpInRedirects                 0                  0.0</span>
+<span class="go">       IcmpInEchos                     298                0.0</span>
+<span class="go">       IcmpInEchoReps                  0                  0.0</span>
+<span class="go">       IcmpInTimestamps                33                 0.0</span>
+<span class="go">       IcmpInTimestampReps             0                  0.0</span>
+<span class="go">       IcmpInAddrMasks                 99                 0.0</span>
+<span class="go">       IcmpInAddrMaskReps              0                  0.0</span>
+<span class="go">       IcmpOutMsgs                     331                0.0</span>
+<span class="go">       IcmpOutErrors                   0                  0.0</span>
+<span class="go">       IcmpOutDestUnreachs             0                  0.0</span>
+<span class="go">       IcmpOutTimeExcds                0                  0.0</span>
+<span class="go">       IcmpOutParmProbs                0                  0.0</span>
+<span class="go">       IcmpOutSrcQuenchs               0                  0.0</span>
+<span class="go">       IcmpOutRedirects                0                  0.0</span>
+<span class="go">       IcmpOutEchos                    0                  0.0</span>
+<span class="go">       IcmpOutEchoReps                 298                0.0</span>
+<span class="go">       IcmpOutTimestamps               0                  0.0</span>
+<span class="go">       IcmpOutTimestampReps            33                 0.0</span>
+<span class="go">       IcmpOutAddrMasks                0                  0.0</span>
+<span class="go">       IcmpOutAddrMaskReps             0                  0.0</span>
+<span class="go">       IcmpMsgInType3                  6                  0.0</span>
+<span class="go">       IcmpMsgInType8                  298                0.0</span>
+<span class="go">       IcmpMsgInType11                 125                0.0</span>
+<span class="go">       IcmpMsgInType13                 33                 0.0</span>
+<span class="go">       IcmpMsgInType17                 99                 0.0</span>
+<span class="go">       IcmpMsgOutType0                 298                0.0</span>
+<span class="go">       IcmpMsgOutType14                33                 0.0</span>
+<span class="go">       TcpActiveOpens                  3330               0.0</span>
+<span class="go">       TcpPassiveOpens                 252                0.0</span>
+<span class="go">       TcpAttemptFails                 0                  0.0</span>
+<span class="go">       TcpEstabResets                  78                 0.0</span>
+<span class="go">       TcpInSegs                       3202615            0.0</span>
+<span class="go">       TcpOutSegs                      6431616            0.0</span>
+<span class="go">       TcpRetransSegs                  7584               0.0</span>
+<span class="go">       TcpInErrs                       0                  0.0</span>
+<span class="go">       TcpOutRsts                      102                0.0</span>
+<span class="go">       TcpInCsumErrors                 0                  0.0</span>
+<span class="go">       UdpInDatagrams                  18972              0.0</span>
+<span class="go">       UdpNoPorts                      0                  0.0</span>
+<span class="go">       UdpInErrors                     0                  0.0</span>
+<span class="go">       UdpOutDatagrams                 19257              0.0</span>
+<span class="go">       UdpRcvbufErrors                 0                  0.0</span>
+<span class="go">       UdpSndbufErrors                 0                  0.0</span>
+<span class="go">       UdpInCsumErrors                 0                  0.0</span>
+<span class="go">       UdpIgnoredMulti                 19989              0.0</span>
+<span class="go">       UdpMemErrors                    0                  0.0</span>
+<span class="go">       UdpLiteInDatagrams              0                  0.0</span>
+<span class="go">       UdpLiteNoPorts                  0                  0.0</span>
+<span class="go">       UdpLiteInErrors                 0                  0.0</span>
+<span class="go">       UdpLiteOutDatagrams             0                  0.0</span>
+<span class="go">       UdpLiteRcvbufErrors             0                  0.0</span>
+<span class="go">       UdpLiteSndbufErrors             0                  0.0</span>
+<span class="go">       UdpLiteInCsumErrors             0                  0.0</span>
+<span class="go">       UdpLiteIgnoredMulti             0                  0.0</span>
+<span class="go">       UdpLiteMemErrors                0                  0.0</span>
+<span class="go">       Ip6InReceives                   2198489            0.0</span>
+<span class="go">       Ip6InHdrErrors                  0                  0.0</span>
+<span class="go">       Ip6InTooBigErrors               0                  0.0</span>
+<span class="go">       Ip6InNoRoutes                   200                0.0</span>
+<span class="go">       Ip6InAddrErrors                 0                  0.0</span>
+<span class="go">       Ip6InUnknownProtos              0                  0.0</span>
+<span class="go">       Ip6InTruncatedPkts              0                  0.0</span>
+<span class="go">       Ip6InDiscards                   0                  0.0</span>
+<span class="go">       Ip6InDelivers                   2177604            0.0</span>
+<span class="go">       Ip6OutForwDatagrams             0                  0.0</span>
+<span class="go">       Ip6OutRequests                  1567967            0.0</span>
+<span class="go">       Ip6OutDiscards                  0                  0.0</span>
+<span class="go">       Ip6OutNoRoutes                  6                  0.0</span>
+<span class="go">       Ip6ReasmTimeout                 0                  0.0</span>
+<span class="go">       Ip6ReasmReqds                   0                  0.0</span>
+<span class="go">       Ip6ReasmOKs                     0                  0.0</span>
+<span class="go">       Ip6ReasmFails                   0                  0.0</span>
+<span class="go">       Ip6FragOKs                      0                  0.0</span>
+<span class="go">       Ip6FragFails                    0                  0.0</span>
+<span class="go">       Ip6FragCreates                  0                  0.0</span>
+<span class="go">       Ip6InMcastPkts                  20785              0.0</span>
+<span class="go">       Ip6OutMcastPkts                 13                 0.0</span>
+<span class="go">       Ip6InOctets                     2578707266         0.0</span>
+<span class="go">       Ip6OutOctets                    3533261025         0.0</span>
+<span class="go">       Ip6InMcastOctets                1442288            0.0</span>
+<span class="go">       Ip6OutMcastOctets               1252               0.0</span>
+<span class="go">       Ip6InBcastOctets                0                  0.0</span>
+<span class="go">       Ip6OutBcastOctets               0                  0.0</span>
+<span class="go">       Ip6InNoECTPkts                  2060704            0.0</span>
+<span class="go">       Ip6InECT1Pkts                   0                  0.0</span>
+<span class="go">       Ip6InECT0Pkts                   137799             0.0</span>
+<span class="go">       Ip6InCEPkts                     0                  0.0</span>
+<span class="go">       Icmp6InMsgs                     7525               0.0</span>
+<span class="go">       Icmp6InErrors                   0                  0.0</span>
+<span class="go">       Icmp6OutMsgs                    7511               0.0</span>
+<span class="go">       Icmp6OutErrors                  0                  0.0</span>
+<span class="go">       Icmp6InCsumErrors               0                  0.0</span>
+<span class="go">       Icmp6InDestUnreachs             10                 0.0</span>
+<span class="go">       Icmp6InPktTooBigs               0                  0.0</span>
+<span class="go">       Icmp6InTimeExcds                0                  0.0</span>
+<span class="go">       Icmp6InParmProblems             0                  0.0</span>
+<span class="go">       Icmp6InEchos                    2                  0.0</span>
+<span class="go">       Icmp6InEchoReplies              6                  0.0</span>
+<span class="go">       Icmp6InGroupMembQueries         0                  0.0</span>
+<span class="go">       Icmp6InGroupMembResponses       0                  0.0</span>
+<span class="go">       Icmp6InGroupMembReductions      0                  0.0</span>
+<span class="go">       Icmp6InRouterSolicits           0                  0.0</span>
+<span class="go">       Icmp6InRouterAdvertisements     0                  0.0</span>
+<span class="go">       Icmp6InNeighborSolicits         4316               0.0</span>
+<span class="go">       Icmp6InNeighborAdvertisements   3189               0.0</span>
+<span class="go">       Icmp6InRedirects                0                  0.0</span>
+<span class="go">       Icmp6InMLDv2Reports             2                  0.0</span>
+<span class="go">       Icmp6OutDestUnreachs            0                  0.0</span>
+<span class="go">       Icmp6OutPktTooBigs              0                  0.0</span>
+<span class="go">       Icmp6OutTimeExcds               0                  0.0</span>
+<span class="go">       Icmp6OutParmProblems            0                  0.0</span>
+<span class="go">       Icmp6OutEchos                   6                  0.0</span>
+<span class="go">       Icmp6OutEchoReplies             2                  0.0</span>
+<span class="go">       Icmp6OutGroupMembQueries        0                  0.0</span>
+<span class="go">       Icmp6OutGroupMembResponses      0                  0.0</span>
+<span class="go">       Icmp6OutGroupMembReductions     0                  0.0</span>
+<span class="go">       Icmp6OutRouterSolicits          0                  0.0</span>
+<span class="go">       Icmp6OutRouterAdvertisements    0                  0.0</span>
+<span class="go">       Icmp6OutNeighborSolicits        3179               0.0</span>
+<span class="go">       Icmp6OutNeighborAdvertisements  4316               0.0</span>
+<span class="go">       Icmp6OutRedirects               0                  0.0</span>
+<span class="go">       Icmp6OutMLDv2Reports            8                  0.0</span>
+<span class="go">       Icmp6InType1                    10                 0.0</span>
+<span class="go">       Icmp6InType128                  2                  0.0</span>
+<span class="go">       Icmp6InType129                  6                  0.0</span>
+<span class="go">       Icmp6InType135                  4316               0.0</span>
+<span class="go">       Icmp6InType136                  3189               0.0</span>
+<span class="go">       Icmp6InType143                  2                  0.0</span>
+<span class="go">       Icmp6OutType128                 6                  0.0</span>
+<span class="go">       Icmp6OutType129                 2                  0.0</span>
+<span class="go">       Icmp6OutType135                 3179               0.0</span>
+<span class="go">       Icmp6OutType136                 4316               0.0</span>
+<span class="go">       Icmp6OutType143                 8                  0.0</span>
+<span class="go">       Udp6InDatagrams                 460                0.0</span>
+<span class="go">       Udp6NoPorts                     0                  0.0</span>
+<span class="go">       Udp6InErrors                    0                  0.0</span>
+<span class="go">       Udp6OutDatagrams                95                 0.0</span>
+<span class="go">       Udp6RcvbufErrors                0                  0.0</span>
+<span class="go">       Udp6SndbufErrors                0                  0.0</span>
+<span class="go">       Udp6InCsumErrors                0                  0.0</span>
+<span class="go">       Udp6IgnoredMulti                0                  0.0</span>
+<span class="go">       Udp6MemErrors                   0                  0.0</span>
+<span class="go">       UdpLite6InDatagrams             0                  0.0</span>
+<span class="go">       UdpLite6NoPorts                 0                  0.0</span>
+<span class="go">       UdpLite6InErrors                0                  0.0</span>
+<span class="go">       UdpLite6OutDatagrams            0                  0.0</span>
+<span class="go">       UdpLite6RcvbufErrors            0                  0.0</span>
+<span class="go">       UdpLite6SndbufErrors            0                  0.0</span>
+<span class="go">       UdpLite6InCsumErrors            0                  0.0</span>
+<span class="go">       UdpLite6MemErrors               0                  0.0</span>
+<span class="go">       TcpExtSyncookiesSent            0                  0.0</span>
+<span class="go">       TcpExtSyncookiesRecv            0                  0.0</span>
+<span class="go">       TcpExtSyncookiesFailed          0                  0.0</span>
+<span class="go">       TcpExtEmbryonicRsts             0                  0.0</span>
+<span class="go">       TcpExtPruneCalled               3791               0.0</span>
+<span class="go">       TcpExtRcvPruned                 0                  0.0</span>
+<span class="go">       TcpExtOfoPruned                 0                  0.0</span>
+<span class="go">       TcpExtOutOfWindowIcmps          0                  0.0</span>
+<span class="go">       TcpExtLockDroppedIcmps          0                  0.0</span>
+<span class="go">       TcpExtArpFilter                 0                  0.0</span>
+<span class="go">       TcpExtTW                        2283               0.0</span>
+<span class="go">       TcpExtTWRecycled                0                  0.0</span>
+<span class="go">       TcpExtTWKilled                  0                  0.0</span>
+<span class="go">       TcpExtPAWSActive                0                  0.0</span>
+<span class="go">       TcpExtPAWSEstab                 11                 0.0</span>
+<span class="go">       TcpExtDelayedACKs               31995              0.0</span>
+<span class="go">       TcpExtDelayedACKLocked          47                 0.0</span>
+<span class="go">       TcpExtDelayedACKLost            282                0.0</span>
+<span class="go">       TcpExtListenOverflows           0                  0.0</span>
+<span class="go">       TcpExtListenDrops               0                  0.0</span>
+<span class="go">       TcpExtTCPHPHits                 699069             0.0</span>
+<span class="go">       TcpExtTCPPureAcks               997468             0.0</span>
+<span class="go">       TcpExtTCPHPAcks                 1235546            0.0</span>
+<span class="go">       TcpExtTCPRenoRecovery           0                  0.0</span>
+<span class="go">       TcpExtTCPSackRecovery           2526               0.0</span>
+<span class="go">       TcpExtTCPSACKReneging           0                  0.0</span>
+<span class="go">       TcpExtTCPSACKReorder            36858              0.0</span>
+<span class="go">       TcpExtTCPRenoReorder            0                  0.0</span>
+<span class="go">       TcpExtTCPTSReorder              85                 0.0</span>
+<span class="go">       TcpExtTCPFullUndo               1                  0.0</span>
+<span class="go">       TcpExtTCPPartialUndo            67                 0.0</span>
+<span class="go">       TcpExtTCPDSACKUndo              11                 0.0</span>
+<span class="go">       TcpExtTCPLossUndo               0                  0.0</span>
+<span class="go">       TcpExtTCPLostRetransmit         184                0.0</span>
+<span class="go">       TcpExtTCPRenoFailures           0                  0.0</span>
+<span class="go">       TcpExtTCPSackFailures           0                  0.0</span>
+<span class="go">       TcpExtTCPLossFailures           0                  0.0</span>
+<span class="go">       TcpExtTCPFastRetrans            7084               0.0</span>
+<span class="go">       TcpExtTCPSlowStartRetrans       0                  0.0</span>
+<span class="go">       TcpExtTCPTimeouts               168                0.0</span>
+<span class="go">       TcpExtTCPLossProbes             345                0.0</span>
+<span class="go">       TcpExtTCPLossProbeRecovery      82                 0.0</span>
+<span class="go">       TcpExtTCPRenoRecoveryFail       0                  0.0</span>
+<span class="go">       TcpExtTCPSackRecoveryFail       0                  0.0</span>
+<span class="go">       TcpExtTCPRcvCollapsed           0                  0.0</span>
+<span class="go">       TcpExtTCPBacklogCoalesce        10938              0.0</span>
+<span class="go">       TcpExtTCPDSACKOldSent           300                0.0</span>
+<span class="go">       TcpExtTCPDSACKOfoSent           49                 0.0</span>
+<span class="go">       TcpExtTCPDSACKRecv              317                0.0</span>
+<span class="go">       TcpExtTCPDSACKOfoRecv           2                  0.0</span>
+<span class="go">       TcpExtTCPAbortOnData            25                 0.0</span>
+<span class="go">       TcpExtTCPAbortOnClose           54                 0.0</span>
+<span class="go">       TcpExtTCPAbortOnMemory          0                  0.0</span>
+<span class="go">       TcpExtTCPAbortOnTimeout         4                  0.0</span>
+<span class="go">       TcpExtTCPAbortOnLinger          0                  0.0</span>
+<span class="go">       TcpExtTCPAbortFailed            0                  0.0</span>
+<span class="go">       TcpExtTCPMemoryPressures        0                  0.0</span>
+<span class="go">       TcpExtTCPMemoryPressuresChrono  0                  0.0</span>
+<span class="go">       TcpExtTCPSACKDiscard            0                  0.0</span>
+<span class="go">       TcpExtTCPDSACKIgnoredOld        2                  0.0</span>
+<span class="go">       TcpExtTCPDSACKIgnoredNoUndo     272                0.0</span>
+<span class="go">       TcpExtTCPSpuriousRTOs           0                  0.0</span>
+<span class="go">       TcpExtTCPMD5NotFound            0                  0.0</span>
+<span class="go">       TcpExtTCPMD5Unexpected          0                  0.0</span>
+<span class="go">       TcpExtTCPMD5Failure             0                  0.0</span>
+<span class="go">       TcpExtTCPSackShifted            34290              0.0</span>
+<span class="go">       TcpExtTCPSackMerged             11301              0.0</span>
+<span class="go">       TcpExtTCPSackShiftFallback      40480              0.0</span>
+<span class="go">       TcpExtTCPBacklogDrop            0                  0.0</span>
+<span class="go">       TcpExtPFMemallocDrop            0                  0.0</span>
+<span class="go">       TcpExtTCPMinTTLDrop             0                  0.0</span>
+<span class="go">       TcpExtTCPDeferAcceptDrop        0                  0.0</span>
+<span class="go">       TcpExtIPReversePathFilter       0                  0.0</span>
+<span class="go">       TcpExtTCPTimeWaitOverflow       0                  0.0</span>
+<span class="go">       TcpExtTCPReqQFullDoCookies      0                  0.0</span>
+<span class="go">       TcpExtTCPReqQFullDrop           0                  0.0</span>
+<span class="go">       TcpExtTCPRetransFail            0                  0.0</span>
+<span class="go">       TcpExtTCPRcvCoalesce            100585             0.0</span>
+<span class="go">       TcpExtTCPOFOQueue               15954              0.0</span>
+<span class="go">       TcpExtTCPOFODrop                0                  0.0</span>
+<span class="go">       TcpExtTCPOFOMerge               38                 0.0</span>
+<span class="go">       TcpExtTCPChallengeACK           0                  0.0</span>
+<span class="go">       TcpExtTCPSYNChallenge           0                  0.0</span>
+<span class="go">       TcpExtTCPFastOpenActive         0                  0.0</span>
+<span class="go">       TcpExtTCPFastOpenActiveFail     0                  0.0</span>
+<span class="go">       TcpExtTCPFastOpenPassive        0                  0.0</span>
+<span class="go">       TcpExtTCPFastOpenPassiveFail    0                  0.0</span>
+<span class="go">       TcpExtTCPFastOpenListenOverflow 0                  0.0</span>
+<span class="go">       TcpExtTCPFastOpenCookieReqd     0                  0.0</span>
+<span class="go">       TcpExtTCPFastOpenBlackhole      0                  0.0</span>
+<span class="go">       TcpExtTCPSpuriousRtxHostQueues  0                  0.0</span>
+<span class="go">       TcpExtBusyPollRxPackets         0                  0.0</span>
+<span class="go">       TcpExtTCPAutoCorking            73847              0.0</span>
+<span class="go">       TcpExtTCPFromZeroWindowAdv      40                 0.0</span>
+<span class="go">       TcpExtTCPToZeroWindowAdv        40                 0.0</span>
+<span class="go">       TcpExtTCPWantZeroWindowAdv      2870               0.0</span>
+<span class="go">       TcpExtTCPSynRetrans             91                 0.0</span>
+<span class="go">       TcpExtTCPOrigDataSent           5948573            0.0</span>
+<span class="go">       TcpExtTCPHystartTrainDetect     34                 0.0</span>
+<span class="go">       TcpExtTCPHystartTrainCwnd       1880               0.0</span>
+<span class="go">       TcpExtTCPHystartDelayDetect     3                  0.0</span>
+<span class="go">       TcpExtTCPHystartDelayCwnd       261                0.0</span>
+<span class="go">       TcpExtTCPACKSkippedSynRecv      0                  0.0</span>
+<span class="go">       TcpExtTCPACKSkippedPAWS         9                  0.0</span>
+<span class="go">       TcpExtTCPACKSkippedSeq          11                 0.0</span>
+<span class="go">       TcpExtTCPACKSkippedFinWait2     0                  0.0</span>
+<span class="go">       TcpExtTCPACKSkippedTimeWait     0                  0.0</span>
+<span class="go">       TcpExtTCPACKSkippedChallenge    0                  0.0</span>
+<span class="go">       TcpExtTCPWinProbe               0                  0.0</span>
+<span class="go">       TcpExtTCPKeepAlive              67                 0.0</span>
+<span class="go">       TcpExtTCPMTUPFail               0                  0.0</span>
+<span class="go">       TcpExtTCPMTUPSuccess            0                  0.0</span>
+<span class="go">       TcpExtTCPDelivered              5951000            0.0</span>
+<span class="go">       TcpExtTCPDeliveredCE            0                  0.0</span>
+<span class="go">       TcpExtTCPAckCompressed          3021               0.0</span>
+<span class="go">       TcpExtTCPZeroWindowDrop         0                  0.0</span>
+<span class="go">       TcpExtTCPRcvQDrop               0                  0.0</span>
+<span class="go">       TcpExtTCPWqueueTooBig           0                  0.0</span>
+<span class="go">       TcpExtTCPFastOpenPassiveAltKey  0                  0.0</span>
+<span class="go">       TcpExtTcpTimeoutRehash          72                 0.0</span>
+<span class="go">       TcpExtTcpDuplicateDataRehash    0                  0.0</span>
+<span class="go">       TcpExtTCPDSACKRecvSegs          371                0.0</span>
+<span class="go">       TcpExtTCPDSACKIgnoredDubious    0                  0.0</span>
+<span class="go">       TcpExtTCPMigrateReqSuccess      0                  0.0</span>
+<span class="go">       TcpExtTCPMigrateReqFailure      0                  0.0</span>
+<span class="go">       IpExtInNoRoutes                 0                  0.0</span>
+<span class="go">       IpExtInTruncatedPkts            0                  0.0</span>
+<span class="go">       IpExtInMcastPkts                62                 0.0</span>
+<span class="go">       IpExtOutMcastPkts               24                 0.0</span>
+<span class="go">       IpExtInBcastPkts                19989              0.0</span>
+<span class="go">       IpExtOutBcastPkts               0                  0.0</span>
+<span class="go">       IpExtInOctets                   533061309          0.0</span>
+<span class="go">       IpExtOutOctets                  5153892360         0.0</span>
+<span class="go">       IpExtInMcastOctets              7448               0.0</span>
+<span class="go">       IpExtOutMcastOctets             3592               0.0</span>
+<span class="go">       IpExtInBcastOctets              2082276            0.0</span>
+<span class="go">       IpExtOutBcastOctets             0                  0.0</span>
+<span class="go">       IpExtInCsumErrors               0                  0.0</span>
+<span class="go">       IpExtInNoECTPkts                1073527            0.0</span>
+<span class="go">       IpExtInECT1Pkts                 0                  0.0</span>
+<span class="go">       IpExtInECT0Pkts                 0                  0.0</span>
+<span class="go">       IpExtInCEPkts                   0                  0.0</span>
+<span class="go">       IpExtReasmOverlaps              0                  0.0</span>
+<span class="go">       MPTcpExtMPCapableSYNRX          0                  0.0</span>
+<span class="go">       MPTcpExtMPCapableSYNTX          2203               0.0</span>
+<span class="go">       MPTcpExtMPCapableSYNACKRX       2172               0.0</span>
+<span class="go">       MPTcpExtMPCapableACKRX          0                  0.0</span>
+<span class="go">       MPTcpExtMPCapableFallbackACK    0                  0.0</span>
+<span class="go">       MPTcpExtMPCapableFallbackSYNACK 22                 0.0</span>
+<span class="go">       MPTcpExtMPFallbackTokenInit     0                  0.0</span>
+<span class="go">       MPTcpExtMPTCPRetrans            0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinNoTokenFound      0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinSynRx             0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinSynAckRx          0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinSynAckHMacFailure 0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinAckRx             0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinAckHMacFailure    0                  0.0</span>
+<span class="go">       MPTcpExtDSSNotMatching          0                  0.0</span>
+<span class="go">       MPTcpExtInfiniteMapRx           0                  0.0</span>
+<span class="go">       MPTcpExtDSSNoMatchTCP           0                  0.0</span>
+<span class="go">       MPTcpExtDataCsumErr             0                  0.0</span>
+<span class="go">       MPTcpExtOFOQueueTail            0                  0.0</span>
+<span class="go">       MPTcpExtOFOQueue                0                  0.0</span>
+<span class="go">       MPTcpExtOFOMerge                0                  0.0</span>
+<span class="go">       MPTcpExtNoDSSInWindow           0                  0.0</span>
+<span class="go">       MPTcpExtDuplicateData           0                  0.0</span>
+<span class="go">       MPTcpExtAddAddr                 0                  0.0</span>
+<span class="go">       MPTcpExtEchoAdd                 0                  0.0</span>
+<span class="go">       MPTcpExtPortAdd                 0                  0.0</span>
+<span class="go">       MPTcpExtAddAddrDrop             0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinPortSynRx         0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinPortSynAckRx      0                  0.0</span>
+<span class="go">       MPTcpExtMPJoinPortAckRx         0                  0.0</span>
+<span class="go">       MPTcpExtMismatchPortSynRx       0                  0.0</span>
+<span class="go">       MPTcpExtMismatchPortAckRx       0                  0.0</span>
+<span class="go">       MPTcpExtRmAddr                  0                  0.0</span>
+<span class="go">       MPTcpExtRmAddrDrop              0                  0.0</span>
+<span class="go">       MPTcpExtRmSubflow               0                  0.0</span>
+<span class="go">       MPTcpExtMPPrioTx                0                  0.0</span>
+<span class="go">       MPTcpExtMPPrioRx                0                  0.0</span>
+<span class="go">       MPTcpExtMPFailTx                0                  0.0</span>
+<span class="go">       MPTcpExtMPFailRx                0                  0.0</span>
+<span class="go">       MPTcpExtMPFastcloseTx           0                  0.0</span>
+<span class="go">       MPTcpExtMPFastcloseRx           0                  0.0</span>
+<span class="go">       MPTcpExtMPRstTx                 17                 0.0</span>
+<span class="go">       MPTcpExtMPRstRx                 0                  0.0</span>
+<span class="go">       MPTcpExtRcvPruned               0                  0.0</span>
+<span class="go">       MPTcpExtSubflowStale            0                  0.0</span>
+<span class="go">       MPTcpExtSubflowRecover          0                  0.0</span>
+</pre></div>
+</div>
+<p>Among all these variables, the ones named <code class="docutils literal notranslate"><span class="pre">\*Ext\*</span></code> are Linux specific
+variables that are not defined in IETF MIBs. The others are usually defined
+in an IETF RFC. The counters maintained by the Linux kernel are defined in
+<a class="reference external" href="https://github.com/torvalds/linux/blob/master/include/uapi/linux/snmp.h">include/uapi/linux/snmp.h</a> and
+<a class="reference external" href="https://github.com/torvalds/linux/blob/master/net/mptcp/mib.h">net/mptcp/mib.h</a> for the Multipath TCP counters.
+Each of the counters exposed by <a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a> correspond to one specific identifier
+in the Linux kernel. For example, the beginning of the IP part of the
+counters is defined as follows:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">enum</span><span class="w"></span>
+<span class="p">{</span><span class="w"></span>
+<span class="w">     </span><span class="n">IPSTATS_MIB_NUM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"></span>
+<span class="w">     </span><span class="cm">/* frequently written fields in fast path, kept in same cache line */</span><span class="w"></span>
+<span class="w">     </span><span class="n">IPSTATS_MIB_INPKTS</span><span class="p">,</span><span class="w">                     </span><span class="cm">/* InReceives */</span><span class="w"></span>
+<span class="w">     </span><span class="n">IPSTATS_MIB_INOCTETS</span><span class="p">,</span><span class="w">                   </span><span class="cm">/* InOctets */</span><span class="w"></span>
+<span class="w">     </span><span class="n">IPSTATS_MIB_INDELIVERS</span><span class="p">,</span><span class="w">                 </span><span class="cm">/* InDelivers */</span><span class="w"></span>
+<span class="w">     </span><span class="n">IPSTATS_MIB_OUTFORWDATAGRAMS</span><span class="p">,</span><span class="w">           </span><span class="cm">/* OutForwDatagrams */</span><span class="w"></span>
+<span class="w">     </span><span class="n">IPSTATS_MIB_OUTPKTS</span><span class="p">,</span><span class="w">                    </span><span class="cm">/* OutRequests */</span><span class="w"></span>
+<span class="w">     </span><span class="n">IPSTATS_MIB_OUTOCTETS</span><span class="p">,</span><span class="w">                  </span><span class="cm">/* OutOctets */</span><span class="w"></span>
+<span class="w">     </span><span class="cm">/* other fields */</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Before looking at the precise meaning of each of the counters managed by
+<a class="reference external" href="https://www.man7.org/linux/man-pages/man8/nstat.8.html">nstat</a>,
+it is interesting to recall the definition of the Case diagrams. This graphical
+representation of SNMP variables can be really useful to understand the
+meaning of the Linux networking counters.</p>
+</section>
+<section id="the-case-diagrams">
+<h2>The Case diagrams<a class="headerlink" href="#the-case-diagrams" title="Permalink to this headline"></a></h2>
+<p>The <span class="target" id="index-4"></span>Case diagrams were introduced by Jeffrey Case and Craig
+Partridge in 1989 in the paper <a class="reference external" href="https://doi.org/10.1145/66093.66094">Case diagrams: a first step to diagrammed
+management information bases</a>.
+This article describes a simple but powerful graphical representation
+of the interactions among the different SNMP variables that a networking
+stack maintains.</p>
+<p>A <cite>Case diagram</cite> represents the flow of packets through a stack and the
+different variables that are updated as the packet progress through the
+stack. The incoming packets are represented as progressing from
+the bottom layer of the stack to the upper layer, while the outgoing
+packets are represented in the other direction. The progression of these
+packets is represented using a large arrow. An horizontal line
+that crosses this arrow indicates the point in the stack where the associated
+SNMP counter is updated. A small that leaves the main packet processing
+flow indicates a specific treatment for a packet and a counter
+that is updated. In some cases, an arrow enters the main workflow and
+updates the associated counter.</p>
+<p>The original paper used the IP counters of the MIB-2 to illustrate the
+<cite>Case diagrams</cite>. This figure is reproduced below in ASCII format to simplify
+the updates to the document.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                   Transport Layer</span>
+<span class="go">-----------------------------------------------------</span>
+<span class="go">                         /\</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> IpInDelivers +++++++++++++++</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+-----------&gt; IpInUnknownProtos</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> IpInDiscards &lt;----------+|</span>
+<span class="go">                         ||</span>
+<span class="go">                         |&lt;----------------  IpReasmOKs</span>
+<span class="go">                         ||                     /\</span>
+<span class="go">                         ||   IpReasmFails  &lt;---+|</span>
+<span class="go">                         ||                     ||</span>
+<span class="go">                         |+--------------&gt; IpReasmReqds</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> IpForwDatagrams &lt;-------+|</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+--------------&gt; IpInAddrErrors</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> IpInHdrErrors &lt;---------+|</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                      +++++++++++++++++++ IpInReceives</span>
+<span class="go">                         ||</span>
+<span class="go">-----------------------------------------------------</span>
+<span class="go">                   Interface Layer</span>
+</pre></div>
+</div>
+<p>The <cite>Case diagram</cite> above shows how the packets are processed by the
+IP stack. First, the Interface layer extracts the payload of the
+received frame and passes it to the IP layer. At this point, the
+<code class="docutils literal notranslate"><span class="pre">IpInReceives</span></code> counter is incremented. The processing of the
+IPv4 packet starts. First, the stack checks for errors inside the IPv4
+header. If an error is detected in the IPv4 header, the packet is dropped
+and <code class="docutils literal notranslate"><span class="pre">IpInHdrErrors</span></code> is incremented. Then, the destination address is checked.
+If the address is incorrect, the packet processing stops and <code class="docutils literal notranslate"><span class="pre">IpInAddrErrors</span></code>
+is incremented.</p>
+<p>If IP forwarding is enabled and the packet is not destined to this host,
+then the packet is forwarded using the FIB. The <code class="docutils literal notranslate"><span class="pre">IpForwDatagrams</span></code> counter
+is incremented.</p>
+<p>The next step is to check whether the received packet is a fragment of
+a larger packet that needs to be reassembled. If the received packet is a
+fragment, then the <code class="docutils literal notranslate"><span class="pre">IpReasmReqds</span></code> counter is incremented and the
+packet passed through the reassembly process. This reassembly can take time
+since more fragments can be required to recover a complete packet. If
+the packet reassembly succeeds, then <code class="docutils literal notranslate"><span class="pre">IpReasmOKs</span></code> is incremented and
+the processing of the full packet continues. If the reassembly fails, e.g.
+because a fragment is missing before the timeout expires, then
+<code class="docutils literal notranslate"><span class="pre">IpReamsFails</span></code> gets incremented.</p>
+<p>A this point, the packets have almost finished to be processed by the
+IP stack. Most packets will be delivered to the transport layer
+and increment the <code class="docutils literal notranslate"><span class="pre">IpInDelivers</span></code> counter except if the IP queue becomes
+full. In this case, the <code class="docutils literal notranslate"><span class="pre">IpInDiscards</span></code> counter is incremented.
+The incoming packet could also be discarded if its <cite>Protocol</cite> field
+does not match one of the transport layers supported by the stack
+(i.e. UDP, TCP, DCCP, ...). In this case, the <code class="docutils literal notranslate"><span class="pre">IpInUnknownProtos</span></code>
+counter is incremented.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mptcp-linux.html" class="btn btn-neutral float-left" title="Multipath TCP on recent Linux kernels" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nstat-mptcp.html" class="btn btn-neutral float-right" title="The Multipath TCP counters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Olivier Bonaventure.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
