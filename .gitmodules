@@ -1,0 +1,3 @@
+[submodule "mptcp-bib"]
+	path = mptcp-bib
+	url = https://github.com/obonaventure/mptcp-bib.git

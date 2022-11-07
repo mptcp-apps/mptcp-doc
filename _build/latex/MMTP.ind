@@ -1,0 +1,21 @@
+\begin{sphinxtheindex}
+\let\bigletter\sphinxstyleindexlettergroup
+\let\spxpagem \sphinxstyleindexpagemain
+\let\spxentry \sphinxstyleindexentry
+\let\spxextra \sphinxstyleindexextra
+
+  \bigletter C
+  \item \spxentry{Case diagrams}, \hyperpage{59}
+
+  \indexspace
+  \bigletter R
+  \item \spxentry{RFC}
+    \subitem \spxentry{RFC 1213}, \hyperpage{49}
+    \subitem \spxentry{RFC 2018}, \hyperpage{23}
+    \subitem \spxentry{RFC 4022}, \hyperpage{49}
+    \subitem \spxentry{RFC 4113}, \hyperpage{49}
+    \subitem \spxentry{RFC 4293}, \hyperpage{49}
+    \subitem \spxentry{RFC 6824}, \hyperpage{61}
+    \subitem \spxentry{RFC 8684}, \hyperpage{61}
+
+\end{sphinxtheindex}

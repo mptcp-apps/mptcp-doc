@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Multipath TCP counters &mdash; Multipath TCP -- documentation 2022 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Single path transport protocols" href="tcp.html" />
+    <link rel="prev" title="Analyzing the output of nstat" href="nstat-intro.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="index.html" class="icon icon-home"> Multipath TCP -- documentation
+          </a>
+              <div class="version">
+                alpha
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="mptcp-linux.html">Multipath TCP on recent Linux kernels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nstat-intro.html">Analyzing the output of nstat</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The Multipath TCP counters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-mpcapable-counters">The MPCapable counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-join-counters">The Join counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-address-advertisement-counters">The address advertisement counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-connection-termination-counters">The connection termination counters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-other-counters">The other counters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tcp.html">Single path transport protocols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mptcp.html">Multipath TCP</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Multipath TCP -- documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>The Multipath TCP counters</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/obonaventure/mptcp-doc/blob/mainnstat-mptcp.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-multipath-tcp-counters">
+<h1>The Multipath TCP counters<a class="headerlink" href="#the-multipath-tcp-counters" title="Permalink to this headline"></a></h1>
+<p>Linux version 5.18 maintains 46 counters for Multipath TCP. These counters
+correspond to different parts of the protocol and can be organized in four
+groups. The first group gathers the counters that are incremented when TCP
+packets containing the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option are processed. The second group
+gathers the counters that are incremented when processing packets with
+the <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code> option. The third group gathers the counters that are
+modified when packets with the <code class="docutils literal notranslate"><span class="pre">ADD_ADDR</span></code>, <code class="docutils literal notranslate"><span class="pre">RM_ADDR</span></code> or <code class="docutils literal notranslate"><span class="pre">MP_PRIO</span></code> option
+are processed. The fourth group gathers the remaining counters of the
+Multipath TCP stack.</p>
+<p>Two versions of Multipath TCP have been specified within the IETF. Version
+0 was initially defined in <span class="target" id="index-0"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6824.html"><strong>RFC 6824</strong></a>. The off-tree but well
+maintained set of patches distributed by
+<a class="reference external" href="https://www.multipath-tcp.org">https://www.multipath-tcp.org</a> implemented
+this version of Multipath TCP. Based on the experience gathered with this
+implementation and also Apple's implementation, Multipath TCP evolved and
+the IETF published version 1 in <span class="target" id="index-1"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8684.html"><strong>RFC 8684</strong></a>. The Multipath TCP counters
+correspond to this version of Multipath TCP.</p>
+<section id="the-mpcapable-counters">
+<h2>The MPCapable counters<a class="headerlink" href="#the-mpcapable-counters" title="Permalink to this headline"></a></h2>
+<p>This group gathers the following counters: <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNRX</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNTX</span></code>, <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNACKRX</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableACKRX</span></code>, <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableFallbackACK</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableFallbackSYNACK</span></code> and <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPFallbackTokenInit</span></code>. They
+relate to the establishment of the initial Multipath TCP subflow
+which is described in the <a class="reference internal" href="mptcp.html#mptcp-initial-mptcp-handshake"><span class="std std-ref">The Multipath TCP handshake</span></a> section.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNTX</span></code> counter is similar to the <code class="docutils literal notranslate"><span class="pre">TcpActiveOpens</span></code>
+counter maintained by TCP. It counts the number of Multipath TCP connections
+that this host has tried to establish. Its value will usually be much smaller than <code class="docutils literal notranslate"><span class="pre">TcpActiveOpens</span></code>. When a Multipath connection is initiated using the
+<code class="docutils literal notranslate"><span class="pre">connect</span></code> system call, both <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNTX</span></code> and
+<code class="docutils literal notranslate"><span class="pre">TcpActiveOpens</span></code> are incremented. Although the name of the counter is
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNTX</span></code>, it is only incremented once per Multipath
+TCP connection if the <code class="docutils literal notranslate"><span class="pre">SYN</span></code> packet needs to be retransmitted.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNACKRX</span></code> counter is incremented every time
+a Multipath TCP connection is confirmed by the reception of a
+<code class="docutils literal notranslate"><span class="pre">SYN+ACK</span></code> with the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option to a <code class="docutils literal notranslate"><span class="pre">SYN</span></code> packet
+that it sent earlier. The value of this counter should be lower than
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNTX</span></code> since only a subset of the connections initiated
+by a host will typically reach a Multipath TCP compliant server.
+If a client receives a <code class="docutils literal notranslate"><span class="pre">SYN+ACK</span></code> without the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option
+in response to a <code class="docutils literal notranslate"><span class="pre">SYN</span></code> sent with the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option, then
+the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableFallbackSYNACK</span></code> counter is incremented. This
+counter tracks the Multipath TCP connections that were forced to fall back
+to regular TCP during the three-way handshake of the initial subflow.</p>
+<p>On the other hand, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNRX</span></code> counter tracks the
+number of Multipath TCP connections that were accepted by the host.
+Its value will usually be much smaller than <code class="docutils literal notranslate"><span class="pre">TcpPassiveOpens</span></code> which
+tracks all accepted TCP connections. When a Multipath connection is accepted,
+both <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNRX</span></code> and <code class="docutils literal notranslate"><span class="pre">TcpPassiveOpens</span></code> are incremented.
+As for <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNTX</span></code>, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableSYNRX</span></code> counter is
+only incremented once per connection and not each time a packet is received.
+Upon reception of a <code class="docutils literal notranslate"><span class="pre">SYN</span></code> with the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option, a
+Multipath TCP server returns a <code class="docutils literal notranslate"><span class="pre">SYN+ACK</span></code> with the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code>
+option. The <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableACKRX</span></code> counter is incremented upon reception
+of the third <code class="docutils literal notranslate"><span class="pre">ACK</span></code> containing the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option. If this option
+is not present in this <code class="docutils literal notranslate"><span class="pre">ACK</span></code>, then the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPCapableFallbackACK</span></code>
+gets incremented.
+If this counter increases, it probably indicates some interference with a
+middlebox that injects acknowledgments during the three-way handshake.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>find example ?</p>
+</div>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>MPTcpExtMPFallbackTokenInit  seems related to the failure of getting a token during the handshake (e.g. because there are too many tokens already or not enough randomness), but there are cases in subflow joins where this counter is also incremented</p>
+</div>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-number">Listing 1 </span><span class="caption-text">The MPCapable counters (active opens)</span><a class="headerlink" href="#id6" title="Permalink to this code"></a></div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> MPTcpExtMPCapableSYNTX+++++++++++++++</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+-----------&gt; MPTcpExtMPCapableSYNACKRX</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+-----------&gt; MPTcpExtMPCapableFallbackSYNACK</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-number">Listing 2 </span><span class="caption-text">The MPCapable counters (passive opens)</span><a class="headerlink" href="#id7" title="Permalink to this code"></a></div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> MPTcpExtMPCapableSYNRX+++++++++++++++</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+-----------&gt; MPTcpExtMPCapableACKRX</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+-----------&gt; MPTcpExtMPCapableFallbackACK</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="the-join-counters">
+<h2>The Join counters<a class="headerlink" href="#the-join-counters" title="Permalink to this headline"></a></h2>
+<p>There are thirteen counters in this group. They are incremented when a host
+processes <code class="docutils literal notranslate"><span class="pre">SYN</span></code> packets corresponding to additional subflows.</p>
+<p>The first counter, <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinSynRx</span></code> is incremented every time a
+<code class="docutils literal notranslate"><span class="pre">SYN</span></code> packet with the <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code> option is received. Upon reception
+of a such packet, the host first verifies that it knows the token of
+the Multipath TCP connection. If so, the processing continues and
+the host returns a <code class="docutils literal notranslate"><span class="pre">SYN+ACK</span></code> packet with the <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code> option, its
+random number and a HMAC. Otherwise, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinNoTokenFound</span></code>
+counter is incremented. The host then waits for the third <code class="docutils literal notranslate"><span class="pre">ACK</span></code>
+which contains the <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code> option and the HMAC computed by
+the remote host. It then checks the validity of the received HMAC. If
+the HMAC is invalid, then the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinAckHMacFailure</span></code> counter
+is incremented.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinSynRx</span></code> counter will increase on Multipath TCP hosts
+that accept subflows, typically servers. The value of the
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinACKRX</span></code> counter should be close to the previous one.
+If the two other counters, <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinNoTokenFound</span></code> or
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinAckHMacFailure</span></code> increase, then the system administrator
+should probably investigate as these are indication of possible attacks.</p>
+<div class="literal-block-wrapper docutils container" id="id8">
+<div class="code-block-caption"><span class="caption-number">Listing 3 </span><span class="caption-text">The Join counters when accepting subflows</span><a class="headerlink" href="#id8" title="Permalink to this code"></a></div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> MPTcpExtMPJoinSynRX +++++++++++++++</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+-----------&gt; MPTcpExtMPJoinNoTokenFound</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> MPTcpExtMPJoinACKRX +++++++++++++++</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+-----------&gt; MPTcpExtMPJoinAckHMacFailure</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+</pre></div>
+</div>
+</div>
+<p>Unfortunately, there is no counter that tracks the creation of new subflows
+by a host. The TCP stack counts these new subflows as active opens, but
+there is no specific Multipath TCP counter. However, the
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinSynAckRX</span></code> counter tracks the reception of <code class="docutils literal notranslate"><span class="pre">SYN+ACK</span></code>
+packets containing the <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code> option. This is thus an indirect
+way to track the creation of new subflows. Upon reception of such a
+packet, in response to a previously sent <code class="docutils literal notranslate"><span class="pre">SYN</span></code> packet with the <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code>
+option, a host checks the validity of the received HMAC. If the HMAC is
+invalid, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinSynAckHMacFailure</span></code> is incremented. This counter
+should rarely increase. If it increases, then the problem should be
+investigated by collecting packet traces.</p>
+<div class="literal-block-wrapper docutils container" id="id9">
+<div class="code-block-caption"><span class="caption-number">Listing 4 </span><span class="caption-text">The Join counters when initiating subflows</span><a class="headerlink" href="#id9" title="Permalink to this code"></a></div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go"> MPTcpExtMPJoinSynAckRX +++++++++++++++</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+<span class="go">                         |+-----------&gt; MPTcpExtMPJoinSynAckHMacFailure</span>
+<span class="go">                         ||</span>
+<span class="go">                         ||</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-todo admonition" id="id3">
+<p class="admonition-title">Todo</p>
+<p>This part is unclear and needs to be checked based on the tests</p>
+</div>
+<p>A Multipath TCP host will usually accept additional subflows on the address
+and ports where the initial subflow was accepted. The following counters
+track the arrival of packets destined to different port numbers:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinPortSynRx</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinPortSynAckRx</span></code>
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinPortAckRx</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The last two counters, <code class="docutils literal notranslate"><span class="pre">MPTcpExtMismatchPortSynRx</span></code> and
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMismatchPortAckRx</span></code> are a bit different. They are incremented when
+a <code class="docutils literal notranslate"><span class="pre">SYN</span></code> or <code class="docutils literal notranslate"><span class="pre">ACK</span></code> sent to a different port number are received.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code> option contains a <code class="docutils literal notranslate"><span class="pre">B</span></code> that indicates whether the new
+subflow should be considered as a backup subflow or a regular one. This
+information is used by the path manager, but no counter tracks the value of
+the backup bit in the <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code> option. Once a subflow has been established,
+its backup status can be changed using the <code class="docutils literal notranslate"><span class="pre">MP_PRIO</span></code> option. The
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtMPPrioTx</span></code> counter is incremented every time such an option is sent.
+The <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPPrioRx</span></code> counter is incremented by each received <code class="docutils literal notranslate"><span class="pre">MP_PRIO</span></code>
+option.</p>
+</section>
+<section id="the-address-advertisement-counters">
+<h2>The address advertisement counters<a class="headerlink" href="#the-address-advertisement-counters" title="Permalink to this headline"></a></h2>
+<p>There are six counters in this group. The advertisement of addresses by
+Multipath TCP is described in ref:<cite>Address management &lt;mmtpbook:mptcp-addr-management&gt;</cite>.</p>
+<p>When a host receives a packet with a valid <code class="docutils literal notranslate"><span class="pre">ADD_ADDR</span></code> option with its
+<code class="docutils literal notranslate"><span class="pre">Echo</span></code> bit set to zero, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtAddAddr</span></code> counter is incremented.
+If this option includes an optional port number, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtPortAdd</span></code>
+counter is also incremented. In addition to these two counters, the
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtAddAddrDrop</span></code> tracks the address advertisements that were received
+by the host, but not processed by the path manager, e.g. because no user
+space path manager was active.</p>
+<p>Multipath TCP does not track the advertisements of addresses by sending
+the <code class="docutils literal notranslate"><span class="pre">ADD_ADDR</span></code> option. However, it tracks the reception of packets
+containing the <code class="docutils literal notranslate"><span class="pre">ADD_ADDR</span></code> option with the <code class="docutils literal notranslate"><span class="pre">Echo</span></code> bit set to one with
+the <code class="docutils literal notranslate"><span class="pre">MPTcpExtEchoAdd</span></code> counter. These packets are echoed by the remote host.</p>
+<p>Similarly, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtRmAddr</span></code> counter tracks the number of received
+<code class="docutils literal notranslate"><span class="pre">RM_ADDR</span></code> options. These options typically indicate a change in the
+addresses owned by a remote peer. Mobile hosts are likely to send these
+options when they move from one type of network to another. The
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtRmAddrDrop</span></code> is incremented when the path manager cannot process an
+incoming <code class="docutils literal notranslate"><span class="pre">RM_ADDR</span></code> option.</p>
+<div class="admonition-todo admonition" id="id4">
+<p class="admonition-title">Todo</p>
+<p>is this a rare event ?</p>
+</div>
+<p>When a host receives a <code class="docutils literal notranslate"><span class="pre">RM_ADDR</span></code> option from a remote peer, its path
+manager should remove the subflows associated with this address. The
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtRmSubflow</span></code> counter tracks the number of subflows that have
+been destroyed by a path manager.</p>
+</section>
+<section id="the-connection-termination-counters">
+<h2>The connection termination counters<a class="headerlink" href="#the-connection-termination-counters" title="Permalink to this headline"></a></h2>
+<p>There are seven counters in this group. They track the abnormal termination of
+a Multipath TCP connection. A normal Multipath TCP connection should end
+with the exchange of <code class="docutils literal notranslate"><span class="pre">DATA_FIN</span></code> in both directions. However, are scenarios
+are possible. First, one of the hosts may wish to quickly terminate the
+Multipath TCP connection without having to maintain state. Multipath TCP
+uses the <code class="docutils literal notranslate"><span class="pre">FAST_CLOSE</span></code> option
+in this case. The <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPFastcloseTx</span></code> and <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPFastcloseRx</span></code>
+counters track the transmission and the reception of such options.</p>
+<p>Multipath TCP was designed to prevent as much as possible interference
+from middleboxes, but there are some types of interferences that force
+Multipath TCP to fallback to regular TCP. In this case, the host that first
+noticed the interference (e.g. problem during the handshake, DSS checksum
+problem, ...) sends a packet with the <code class="docutils literal notranslate"><span class="pre">MP_FAIL</span></code> option. This forces the
+Multipath TCP connection to fall back to a regular TCP connection.
+The <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPFailTx</span></code> and <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPFailRx</span></code> counters track the
+transmission and the reception of the <code class="docutils literal notranslate"><span class="pre">MP_FAIL</span></code> option. During some
+types of fall backs, a host may also send an infinite DSS mapping. The
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtInfiniteMapRx</span></code> counter tracks the reception of such infinite
+DSS mappings.</p>
+<p>An increase of
+these counters would indicate some type of middlebox interference which
+should be investigated since it could prevent a complete utilization of
+Multipath TCP.</p>
+<p>Like TCP, Multipath TCP uses TCP <code class="docutils literal notranslate"><span class="pre">RST</span></code> to terminate subflows. Multipath
+TCP also defines the <code class="docutils literal notranslate"><span class="pre">MP_TCPRST</span></code> option which can contain an option reason
+code and flags indicating some information about the reason for the
+transmission of the <code class="docutils literal notranslate"><span class="pre">RST</span></code>. The <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPRstTx</span></code> and <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPRstRx</span></code>
+counters track the transmission and the reception of such <code class="docutils literal notranslate"><span class="pre">RST</span></code> packets.</p>
+</section>
+<section id="the-other-counters">
+<h2>The other counters<a class="headerlink" href="#the-other-counters" title="Permalink to this headline"></a></h2>
+<p>The remaining eleven counters are mainly related to processing of data.</p>
+<p>If the DSS checksum is enabled, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtDataCsumErr</span></code> is incremented
+every time a check of the DSS checksum fails. This should be a rare event that
+likely indicates the presence of middleboxes. It should be correlated with
+the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPFailTx</span></code> and <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPFailRx</span></code> counters discussed in the
+previous section.</p>
+<p>Three counters track the DSS option of the incoming packets :
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtDSSNotMatching</span></code>, <code class="docutils literal notranslate"><span class="pre">MPTcpExtDSSNoMatchTCP</span></code> and
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtNoDSSInWindow</span></code>. The first counter is
+incremented when a mapping is received for data that has already been mapped
+and the new mapping is not the same as the existing one. The second counter
+is incremented when the TCP sequence numbers found in the mapping do not
+match with the current TCP sequence numbers. The third counter is incremented
+upon reception of a packet that indicates a DSS option that is outside the
+current window. These three counters should rarely increase.</p>
+<p>The last counter that tracks data at the Multipath TCP connection
+level is <code class="docutils literal notranslate"><span class="pre">MPTcpExtDuplicateData</span></code>. It counts the number of received
+packets whose data has been ignored because it had already been received
+earlier. Such duplicated data can occur with Multipath TCP when data
+sent over a subflow is retransmitted over another subflow. It would
+be interesting to follow the evolution of this counter on a server that
+interacts with mobile devices.</p>
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<p>check with Matthieu</p>
+</div>
+<p>Multipath TCP tracks losses on the subflows that compose a Multipath
+TCP connection. If one subflow accumulates losses, it may be marked
+as stale and the packet scheduler will stop using it to transmit data
+until the losses have been recovered. The <code class="docutils literal notranslate"><span class="pre">MPTcpExtSubflowStale</span></code> counter is
+incremented every time a subflow is marked as being stale. The
+<code class="docutils literal notranslate"><span class="pre">MPTcpExtSubflowRecover</span></code> counter tracks the transitions from stale to
+active.</p>
+<p>Multipath TCP uses an out-of-order queue to reorder the data received over
+the different subflows. The <code class="docutils literal notranslate"><span class="pre">MPTcpExtOFOQueueTail</span></code> and <code class="docutils literal notranslate"><span class="pre">MPTcpExtOFOQueue</span></code>   counters track the insertion of data at the tail and in the out-of-order
+queue. The <code class="docutils literal notranslate"><span class="pre">MPTcpExtOFOMerge</span></code> is incremented when data present in the
+out-or-order queue can be merged.</p>
+<p>Finally, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtRcvPruned</span></code> tracks the number of packets that
+were dropped because the memory available for Multipath TCP was full.
+If this counter increases, you should probably check the memory configuration
+of your host.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="nstat-intro.html" class="btn btn-neutral float-left" title="Analyzing the output of nstat" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tcp.html" class="btn btn-neutral float-right" title="Single path transport protocols" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Olivier Bonaventure.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

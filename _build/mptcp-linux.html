@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multipath TCP on recent Linux kernels &mdash; Multipath TCP -- documentation 2022 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Analyzing the output of nstat" href="nstat-intro.html" />
+    <link rel="prev" title="Welcome to Modern Multipath Transport Protocols" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="index.html" class="icon icon-home"> Multipath TCP -- documentation
+          </a>
+              <div class="version">
+                alpha
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multipath TCP on recent Linux kernels</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#enabling-multipath-tcp">Enabling Multipath TCP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analyzing-the-output-of-ss">Analyzing the output of ss</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nstat-intro.html">Analyzing the output of nstat</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nstat-mptcp.html">The Multipath TCP counters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcp.html">The Transmission Control Protocol (TCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mptcp.html">Multipath TCP</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Multipath TCP -- documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Multipath TCP on recent Linux kernels</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/obonaventure/mptcp-doc/blob/mainmptcp-linux.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="multipath-tcp-on-recent-linux-kernels">
+<h1>Multipath TCP on recent Linux kernels<a class="headerlink" href="#multipath-tcp-on-recent-linux-kernels" title="Permalink to this headline"></a></h1>
+<p>Starting with version 5.6, the official Linux kernel includes support for Multipath TCP. The set of features supported by this implementation has increased over time as shown by its <a class="reference external" href="https://github.com/multipath-tcp/mptcp_net-next/wiki">ChangeLog</a>.</p>
+<p>To avoid any interference with regular TCP, this implementation only creates a Multipath TCP connection if the application has created its <code class="docutils literal notranslate"><span class="pre">socket</span></code> using the <code class="docutils literal notranslate"><span class="pre">IPPROTO_MPTCP</span></code> protocol. Applications will probably be modified in the coming months and years to add specific support for Multipath TCP, but in the mean time, the Multipath TCP developers have created a work around to force legacy applications to use Multipath TCP with the <code class="docutils literal notranslate"><span class="pre">mptcpize</span></code> command which is bundled with the <a class="reference external" href="https://intel.github.io/mptcpd/">mptcpd</a> daemon. We use this solution in this section.</p>
+<p>To illustrate Multipath TCP, we use a very simple setup with a Linux client using Ubuntu 22 and a Linux server using Debian. The client uses Linux kernel version 5.15 while the server uses version 5.17. The server has a single network interface with an IPv4 and an IPv6 address. The client has both a Wi-Fi and an Ethernet interface. These two interfaces are connected to the same router that allocates IP addresses in the same subnet on both interfaces. The client has both an IPv4 and an IPv6 address.</p>
+<section id="enabling-multipath-tcp">
+<h2>Enabling Multipath TCP<a class="headerlink" href="#enabling-multipath-tcp" title="Permalink to this headline"></a></h2>
+<p>Multipath TCP is a feature that needs to be compiled inside the kernel. If you compile your own kernel, you can manually select Multipath TCP.</p>
+<p>Most users prefer to rely on already compiled Linux kernels that are included in their distribution. The following distributions support Multipath TCP:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>CentOS starting with</p></li>
+<li><p>Debian starting with</p></li>
+<li><p>Ubuntu starting with 22.04</p></li>
+</ul>
+</div></blockquote>
+<p>You need to to install a recent kernel to benefit from Multipath TCP. On some distributions, this installation will be part of the regular upgrade. On other distributions, you will need to add it manually.</p>
+<p>Once the kernel has been installed and your computer has rebooted, you first need to verify that Multipath TCP is enabled.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo sysctl -a | grep mptcp.enabled</span>
+<span class="go">net.mptcp.enabled = 1</span>
+</pre></div>
+</div>
+<p>Here, the kernel supports Multipath TCP. If, for any reason, you want to disable Multipath TCP, you need to set this <code class="docutils literal notranslate"><span class="pre">sysctl</span></code> variable to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>To illustrate the basic operation of <code class="docutils literal notranslate"><span class="pre">mptcpize</span></code>, let us first use the netcat command over the loopback interface. This is obviously not the target use case for Multipath TCP, but a nice way to perform tests.</p>
+<p>Netcat allows to easily launch clients and servers. We start the server using: <code class="docutils literal notranslate"><span class="pre">mptcpize</span> <span class="pre">run</span> <span class="pre">nc</span> <span class="pre">-l</span> <span class="pre">-p</span> <span class="pre">12345</span></code>. This is a TCP server that listens on port <code class="docutils literal notranslate"><span class="pre">12345</span></code>. The client connects to this server using the <code class="docutils literal notranslate"><span class="pre">mptcpize</span> <span class="pre">run</span> <span class="pre">nc</span> <span class="pre">127.0.0.1</span> <span class="pre">12345</span></code> command. The connection is established and all text lines sent by the client are printed by the server on standard output.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>mptcpize run nc -l -p <span class="m">12345</span>
+<span class="go">Simple test</span>
+</pre></div>
+</div>
+<p>There are several ways to check that Multipath TCP is used for this connection. First, the <code class="docutils literal notranslate"><span class="pre">ss</span></code> command provides information about the status of the different sockets.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ss -iaM</span>
+<span class="go">State    Recv-Q    Send-Q       Local Address:Port        Peer Address:Port    Process</span>
+<span class="go">ESTAB    0         0                127.0.0.1:12345          127.0.0.1:52854</span>
+<span class="go">         subflows_max:2 remote_key token:5bba80d9 write_seq:2266a099179e2476 snd_una:2266a099179e2476 rcv_nxt:de9999038d0a29a2</span>
+<span class="go">ESTAB    0         0                127.0.0.1:52854          127.0.0.1:12345</span>
+<span class="go">         subflows_max:2 remote_key token:c1f12b87 write_seq:de9999038d0a29a2 snd_una:de9999038d0a29a2 rcv_nxt:2266a099179e2476</span>
+</pre></div>
+</div>
+<p>ss provides several useful information to debug a Multipath TCP connection. The first column indicates that the connection is in the Established state, which means that it can currently transfer data. It also indicates the length of the Send and Receive queues at the TCP level and the four-tuple that identifies the connection. The next line provides Multipath TCP information with the maximum number of subflows which can be attached to the connection, the token assigned by the remote host and the write_seq, snd_una and rcv_next parameters of the sate machine. The next two lines provide information about the other direction of the connection.</p>
+<p>It is also possible to capture packets on the loopback interface to verify that Multipath TCP is used. The output below provides the first collected packets:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">tcpdump: verbose output suppressed, use -v[v]... for full protocol decode listening on lo, link-type EN10MB (Ethernet), snapshot length 262144 bytes</span>
+<span class="go">18:43:42.676396 IP 127.0.0.1.52854 &gt; 127.0.0.1.12345: Flags [S], seq 904893125, win 65495, options [mss 65495,sackOK,TS val 4026038040 ecr 0,nop,wscale 7,mptcp capable v1], length 0</span>
+<span class="go">18:43:42.676426 IP 127.0.0.1.12345 &gt; 127.0.0.1.52854: Flags [S.], seq 1804351310, ack 904893126, win 65483, options [mss 65495,sackOK,TS val 4026038040 ecr 4026038040,nop,wscale 7,mptcp capable v1 {0x45edb502d861e7b1}], length 0</span>
+<span class="go">18:43:42.676472 IP 127.0.0.1.52854 &gt; 127.0.0.1.12345: Flags [.], ack 1, win 512, options [nop,nop,TS val 4026038040 ecr 4026038040,mptcp capable v1 {0xdbb760db1d55e07b,0x45edb502d861e7b1}], length 0</span>
+<span class="go">18:44:59.519697 IP 127.0.0.1.52854 &gt; 127.0.0.1.12345: Flags [P.], seq 1:13, ack 1, win 512, options [nop,nop,TS val 4026114884 ecr 4026038040,mptcp capable v1 {0xdbb760db1d55e07b,0x45edb502d861e7b1},nop,nop], length 12</span>
+<span class="go">18:44:59.519755 IP 127.0.0.1.12345 &gt; 127.0.0.1.52854: Flags [.], ack 13, win 512, options [nop,nop,TS val 4026114884 ecr 4026114884,mptcp dss ack 16040019788386937262], length 0</span>
+</pre></div>
+</div>
+<p>The first packet is the <code class="docutils literal notranslate"><span class="pre">SYN</span></code> that includes the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option. The server replies with the <code class="docutils literal notranslate"><span class="pre">SYN+ACK</span></code> with the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> containing the server key. The client returns the third <code class="docutils literal notranslate"><span class="pre">ACK</span></code> with the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> and the two keys. As the server did not send any data, the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option is sent again in the packet containing the <code class="docutils literal notranslate"><span class="pre">Simple</span> <span class="pre">test</span></code> string. This packet also contains the <code class="docutils literal notranslate"><span class="pre">DSS</span></code> option. The server replies with an acknowledgment that carries the <code class="docutils literal notranslate"><span class="pre">DSS</span></code> option.</p>
+<p>We can now use the netcat application to explore the operation of Multipath TCP over the Internet. Let us start with a very simple example.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">mptcpize run nc serverv4 12345</span>
+<span class="go">hello</span>
+</pre></div>
+</div>
+<p>The netcat process listens on port 12345 on the server. This results in the following Multipath TCP connection :</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">09:05:23.695876 IP host-78-129-5-171.dynamic.voo.be.41510 &gt; serverv4.12345: Flags [S], seq 3525674027, win 64240, options [mss 1460,sackOK,TS val 2619832768 ecr 0,nop,wscale 7,mptcp capable v1], length 0</span>
+<span class="go">09:05:23.696076 IP serverv4.12345 &gt; host-78-129-5-171.dynamic.voo.be.41510: Flags [S.], seq 1745741580, ack 3525674028, win 65160, options [mss 1460,sackOK,TS val 3069340264 ecr 2619832768,nop,wscale 7,mptcp capable v1 {0x82aa42ef4245f0d0}], length 0</span>
+<span class="go">09:05:23.707909 IP host-78-129-5-171.dynamic.voo.be.41510 &gt; serverv4.12345: Flags [.], ack 1, win 502, options [nop,nop,TS val 2619832783 ecr 3069340264,mptcp capable v1 {0x9dc8e3972e3d9f25,0x82aa42ef4245f0d0}], length 0</span>
+<span class="go">09:05:30.776312 IP host-78-129-5-171.dynamic.voo.be.41510 &gt; serverv4.12345: Flags [P.], seq 1:7, ack 1, win 502, options [nop,nop,TS val 2619839851 ecr 3069340264,mptcp capable v1 {0x9dc8e3972e3d9f25,0x82aa42ef4245f0d0},nop,nop], length 6</span>
+<span class="go">09:05:30.776484 IP serverv4.12345 &gt; host-78-129-5-171.dynamic.voo.be.41510: Flags [.], ack 7, win 510, options [nop,nop,TS val 3069347345 ecr 2619839851,mptcp dss ack 1561335003985645838], length 0</span>
+</pre></div>
+</div>
+<p>This is a Multipath TCP connection since it includes the Multipath TCP options, but the client does not create an additional subflow and the server does not announce its other addresses. This is the expected behavior since these operations are controlled by the path manager. On Linux, the Multipath TCP path manager can be configured using the <a class="reference external" href="https://man7.org/linux/man-pages/man8/ip-mptcp.8.html">ip-mptcp</a> command. This command can be used to configure different parameters that are associated to an IP address. The path manager associates a numeric identifier to each IP address or endpoint. The <code class="docutils literal notranslate"><span class="pre">ip</span> <span class="pre">mptcp</span> <span class="pre">endpoint</span> <span class="pre">show</span></code> command lists the identifiers of the active IP addresses on the host. Here is an example of the output of this command on our client:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ip mptcp endpoint show</span>
+<span class="go">fe80::3934:7572:b1ff:b555 id 1 dev wlp3s0</span>
+<span class="go">192.168.0.43 id 2 dev wlp3s0</span>
+<span class="go">fe80::5642:39bd:3390:43d3 id 3 dev enp2s0</span>
+<span class="go">192.168.0.37 id 4 dev enp2s0</span>
+<span class="go">2a02:2788:10c4:123:3d66:f590:d891:8fb3 id 5 dev wlp3s0</span>
+<span class="go">2a02:2788:10c4:123:6636:10c6:692b:18cc id 6 dev enp2s0</span>
+<span class="go">2a02:2788:10c4:123:2a09:5ec7:9b99:4a97 id 7 dev enp2s0</span>
+</pre></div>
+</div>
+<p>The two <code class="docutils literal notranslate"><span class="pre">fe80</span></code> addresses are the IPv6 link local addresses configured on the Ethernet (<code class="docutils literal notranslate"><span class="pre">enp2s0</span></code>) and Wi-Fi (<code class="docutils literal notranslate"><span class="pre">wlp3s0</span></code>) interfaces of our client host. There are three flags which can be associated with each endpoint identifier:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">subflow</span></code>. When this flag is set, the path manager will try to create a subflow over this interface when a Multipath TCP is created or the interface becomes active while there was an ongoing Multipath TCP connection. This flag is mainly useful for clients.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">signal</span></code>. When this flag is set, the path manager will announce the address of the endpoint over any Multipath TCP connection created using other addresses. This flag can be used on clients or servers. It is mainly useful on servers that have multiple addresses.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backup</span></code>. This flag can be combined with the two other flags. When combined with the <code class="docutils literal notranslate"><span class="pre">subflow</span></code> flag, it indicates that a backup subflow will be created. When combined with the <code class="docutils literal notranslate"><span class="pre">signal</span></code> flag, it indicates that the address will be advertised as a backup address.</p></li>
+</ul>
+</div></blockquote>
+<p>On our client host, we can configure the Wi-Fi interface as a backup interface that creates subflows as follows :</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo ip mptcp endpoint del id 2</span>
+<span class="go">sudo ip mptcp endpoint add 192.168.0.43 dev wlp3s0 subflow backup</span>
+<span class="go">sudo ip mptcp endpoint show</span>
+<span class="go">fe80::3934:7572:b1ff:b555 id 1 dev wlp3s0</span>
+<span class="go">fe80::5642:39bd:3390:43d3 id 3 dev enp2s0</span>
+<span class="go">192.168.0.37 id 4 dev enp2s0</span>
+<span class="go">2a02:2788:10c4:123:3d66:f590:d891:8fb3 id 5 dev wlp3s0</span>
+<span class="go">2a02:2788:10c4:123:6636:10c6:692b:18cc id 6 dev enp2s0</span>
+<span class="go">2a02:2788:10c4:123:2a09:5ec7:9b99:4a97 id 7 dev enp2s0</span>
+<span class="go">192.168.0.43 id 8 subflow backup dev wlp3s0</span>
+</pre></div>
+</div>
+<p>We had to first remove the configuration for this endpoint because a default one was already active. Then we added the new parameters and verified them.</p>
+<p>The path manager also has some limits which can be configured using the <code class="docutils literal notranslate"><span class="pre">ip</span> <span class="pre">mptcp</span> <span class="pre">limits</span></code> command. Two limits can be set.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ip</span> <span class="pre">mptcp</span> <span class="pre">limits</span> <span class="pre">set</span> <span class="pre">subflow</span> <span class="pre">n</span></code> where <code class="docutils literal notranslate"><span class="pre">n</span></code> is an integer. This restricts the Multipath TCP connection to use up to <code class="docutils literal notranslate"><span class="pre">n</span></code> different subflows. Servers should protect themselves by setting this limit to a few subflows. Most use cases would work well with 2 or 4 subflows.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ip</span> <span class="pre">mptcp</span> <span class="pre">limits</span> <span class="pre">set</span> <span class="pre">add_addr_accepted</span> <span class="pre">n</span></code> where <code class="docutils literal notranslate"><span class="pre">n</span></code> is an integer. This parameter limits the number of addresses that are learned over each Multipath TCP connection. This parameter could be used to protect the Multipath TCP implementation against attacks where two many addresses are advertised. Most use cases would work with 4 accepted addresses.</p></li>
+</ul>
+</div></blockquote>
+<p>These parameters control the path manager, but before creating Multipath TCP subflows over different paths, we need to configure the IP routing table of our client host. Our client host has two network interfaces: Wi-Fi and Ethernet. By default, Linux prefers the Ethernet interface to Wi-Fi. The two interfaces are configured as follows :</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ip -4 addr show</span>
+<span class="go">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000</span>
+<span class="go">    inet 127.0.0.1/8 scope host lo</span>
+<span class="go">    valid_lft forever preferred_lft forever</span>
+<span class="go">2: enp2s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000</span>
+<span class="go">    inet 192.168.0.37/24 brd 192.168.0.255 scope global dynamic noprefixroute enp2s0</span>
+<span class="go">    valid_lft 75697sec preferred_lft 75697sec</span>
+<span class="go">3: wlp3s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default qlen 1000</span>
+<span class="go">    inet 192.168.0.43/24 brd 192.168.0.255 scope global dynamic noprefixroute wlp3s0</span>
+<span class="go">    valid_lft 75696sec preferred_lft 75696sec</span>
+</pre></div>
+</div>
+<p>By default, Linux creates the two following default routes.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">route -n</span>
+<span class="go">Kernel IP routing table</span>
+<span class="go">Destination     Gateway         Genmask         Flags Metric Ref    Use Iface</span>
+<span class="go">0.0.0.0         192.168.0.1     0.0.0.0         UG    100    0        0 enp2s0</span>
+<span class="go">0.0.0.0         192.168.0.1     0.0.0.0         UG    600    0        0 wlp3s0</span>
+</pre></div>
+</div>
+<p>We need to configure the routing tables to be able to use the two interfaces simultaneously. For this, we need to ensure that packets with source address <code class="docutils literal notranslate"><span class="pre">192.168.0.37</span></code> are sent over the <code class="docutils literal notranslate"><span class="pre">enp2s0</span></code> interface while packets with source address <code class="docutils literal notranslate"><span class="pre">192.168.0.43</span></code> are sent over the <code class="docutils literal notranslate"><span class="pre">wlp3s0</span></code> interface. This can be achieved using two different routing tables.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp"># </span>create the two routing tables
+<span class="go">ip rule add from 192.168.0.37 table 1</span>
+<span class="go">ip rule add from 192.168.0.43 table 2</span>
+
+<span class="gp"># </span>Configure routing table <span class="m">1</span> <span class="k">for</span> enp2s0
+<span class="go">ip route add 192.168.0.0/24 dev enp2s0 scope link table 1</span>
+<span class="go">ip route add default via 192.168.0.1 dev enp2s0 table 1</span>
+
+<span class="gp"># </span>Configure routing table <span class="m">2</span> <span class="k">for</span> wlp3s0
+<span class="go">ip route add 192.168.0.0/24 dev wlp3s0 scope link table 2</span>
+<span class="go">ip route add default via 192.168.0.1 dev wlp3s0 table 2</span>
+
+<span class="gp"># </span>Configure a default route to regular internet
+<span class="go">ip route add default scope global nexthop via 192.168.0.1 dev enp2s0</span>
+</pre></div>
+</div>
+<p>We can check the routing tables using the ip command.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ip rule show</span>
+<span class="go">0:   from all lookup local</span>
+<span class="go">32764:       from 192.168.0.43 lookup 2</span>
+<span class="go">32765:       from 192.168.0.37 lookup 1</span>
+<span class="go">32766:       from all lookup main</span>
+<span class="go">32767:       from all lookup default</span>
+
+<span class="go">ip route</span>
+<span class="go">default via 192.168.0.1 dev enp2s0</span>
+<span class="go">default via 192.168.0.1 dev enp2s0 proto dhcp metric 100</span>
+<span class="go">default via 192.168.0.1 dev wlp3s0 proto dhcp metric 600</span>
+<span class="go">169.254.0.0/16 dev wlp3s0 scope link metric 1000</span>
+<span class="go">192.168.0.0/24 dev enp2s0 proto kernel scope link src 192.168.0.37 metric 100</span>
+<span class="go">192.168.0.0/24 dev wlp3s0 proto kernel scope link src 192.168.0.43 metric 600</span>
+
+<span class="go">ip route show table 1</span>
+<span class="go">default via 192.168.0.1 dev enp2s0</span>
+<span class="go">192.168.0.0/24 dev enp2s0 scope link</span>
+
+<span class="go">ip route show table 2</span>
+<span class="go">default via 192.168.0.1 dev wlp3s0</span>
+<span class="go">192.168.0.0/24 dev wlp3s0 scope link</span>
+</pre></div>
+</div>
+<p>We can verify that the two routing tables are correct using <code class="docutils literal notranslate"><span class="pre">nc</span></code> by forcing it to use a specific source address.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">echo -e &quot;GET / HTTP/1.0\r\n&quot; | nc -4 -s 192.168.0.37 test.multipath-tcp.org 80</span>
+<span class="go">HTTP/1.0 200 OK</span>
+<span class="go">Content-Type: text/html</span>
+<span class="go">ETag: &quot;4215149735&quot;</span>
+<span class="go">Last-Modified: Tue, 05 Jul 2022 16:11:47 GMT</span>
+<span class="go">Content-Length: 389</span>
+<span class="go">Connection: close</span>
+<span class="go">Date: Wed, 06 Jul 2022 11:34:24 GMT</span>
+<span class="go">Server: lighttpd/1.4.59</span>
+
+<span class="go">&lt;!DOCTYPE html&gt;</span>
+<span class="go">&lt;html&gt;</span>
+<span class="go">&lt;head&gt;</span>
+<span class="go">&lt;title&gt;Welcome to test.multipath-tcp.org!&lt;/title&gt;</span>
+<span class="go">&lt;style&gt;</span>
+<span class="go">body {</span>
+<span class="go">width: 35em;</span>
+<span class="go">margin: 0 auto;</span>
+<span class="go">font-family: Tahoma, Verdana, Arial, sans-serif;</span>
+<span class="go">}</span>
+<span class="go">&lt;/style&gt;</span>
+<span class="go">&lt;/head&gt;</span>
+<span class="go">&lt;body&gt;</span>
+<span class="go">&lt;h1&gt;Welcome to test.multipath-tcp.org !&lt;/h1&gt;</span>
+<span class="go">&lt;p&gt;This web server runs Multipath TCP v1&lt;/p&gt;</span>
+
+<span class="go">&lt;p&gt;&lt;em&gt;Thank you for using Multipath TCP.&lt;/em&gt;&lt;/p&gt;</span>
+<span class="go">&lt;/body&gt;</span>
+<span class="go">&lt;/html&gt;</span>
+</pre></div>
+</div>
+<p>You should get the same result when using the second interface, IP address <code class="docutils literal notranslate"><span class="pre">192.168.0.43</span></code> in our example.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">echo -e &quot;GET / HTTP/1.0\r\n&quot; | nc -4 -s 192.168.0.43 test.multipath-tcp.org 80</span>
+</pre></div>
+</div>
+<p>The next step is to verify that Multipath TCP is working correctly and that two subflows are created. For this, we'll use the <code class="docutils literal notranslate"><span class="pre">-i</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">nc</span></code> to add a delay between the two lines of the HTTP GET. We will leverage this delay to check that MPTCP is correctly working using <code class="docutils literal notranslate"><span class="pre">ss</span></code> or <code class="docutils literal notranslate"><span class="pre">tcpdump</span></code></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">echo -e &quot;GET / HTTP/1.0\r\n&quot; | mptcpize run nc -4 -i 5 test.multipath-tcp.org 80</span>
+</pre></div>
+</div>
+<p>We can observe the creation of the connection and the subflow using both <code class="docutils literal notranslate"><span class="pre">ss</span></code> and <code class="docutils literal notranslate"><span class="pre">tcpdump</span></code>. <code class="docutils literal notranslate"><span class="pre">ss</span></code> shows that there are two subflows towards <code class="docutils literal notranslate"><span class="pre">test.multipath-tcp.org</span></code>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ss -4 -iatM  dst test.multipath-tcp.org</span>
+<span class="go">Netid  State  Recv-Q  Send-Q         Local Address:Port      Peer Address:Port  Process</span>
+<span class="go">tcp    ESTAB  0       0        192.168.0.43%wlp3s0:34801     5.196.67.207:http</span>
+<span class="go">      cubic wscale:7,7 rto:220 rtt:17.439/8.719 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:10 bytes_acked:1 segs_out:2 segs_in:2 send 6.64Mbps lastsnd:1776 lastrcv:1776 lastack:1764 pacing_rate 13.3Mbps delivered:1 rcv_space:14480 rcv_ssthresh:64088 minrtt:17.439</span>
+<span class="go">tcp    ESTAB  0       0               192.168.0.37:47672     5.196.67.207:http</span>
+<span class="go">      cubic wscale:7,7 rto:216 rtt:14/5.405 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:10 bytes_sent:16 bytes_acked:17 segs_out:3 segs_in:3 data_segs_out:1 send 8.27Mbps lastsnd:1808 lastrcv:1808 lastack:1792 pacing_rate 16.5Mbps delivery_rate 790kbps delivered:2 busy:16ms rcv_space:14480 rcv_ssthresh:64088 minrtt:13.905</span>
+<span class="go">mptcp  ESTAB  0       0               192.168.0.37:47672     5.196.67.207:http</span>
+<span class="go">      subflows:1 subflows_max:8 remote_key token:e1e3cdeb write_seq:1045ecfa3f05f4ea snd_una:1045ecfa3f05f4ea rcv_nxt:d0568f430363c9aa</span>
+</pre></div>
+</div>
+<p>The line starting with <code class="docutils literal notranslate"><span class="pre">mptcp</span></code> indicates that the Multipath TCP connection above has one additional subflow.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">tcpdump</span></code> output reveals precisely which packets have been sent over each network interface.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sudo tcpdump -n -i any host test.multipath-tcp.org and port 80tcpdump: data link type LINUX_SLL2</span>
+<span class="go">tcpdump: verbose output suppressed, use -v[v]... for full protocol decode</span>
+<span class="go">listening on any, link-type LINUX_SLL2 (Linux cooked v2), snapshot length 262144 bytes</span>
+<span class="go">13:43:26.620667 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [S], seq 3585891423, win 64240, options [mss 1460,sackOK,TS val 3993892549 ecr 0,nop,wscale 7,mptcp capable v1], length 0</span>
+<span class="go">13:43:26.634537 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [S.], seq 1788691420, ack 3585891424, win 65160, options [mss 1460,sackOK,TS val 1030255900 ecr 3993892549,nop,wscale 7,mptcp capable v1 {0x54f04ad5bd2d9f42}], length 0</span>
+<span class="go">13:43:26.634609 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [.], ack 1, win 502, options [nop,nop,TS val 3993892563 ecr 1030255900,mptcp capable v1 {0xff2ec3a2f6151881,0x54f04ad5bd2d9f42}], length 0</span>
+<span class="go">13:43:26.634718 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [P.], seq 1:17, ack 1, win 502, options [nop,nop,TS val 3993892563 ecr 1030255900,mptcp capable v1 {0xff2ec3a2f6151881,0x54f04ad5bd2d9f42},nop,nop], length 16: HTTP: GET / HTTP/1.0</span>
+<span class="go">13:43:26.649351 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [.], ack 17, win 509, options [nop,nop,TS val 1030255916 ecr 3993892563,mptcp dss ack 1172603837543216362], length 0</span>
+<span class="go">13:43:26.649351 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [.], ack 17, win 509, options [nop,nop,TS val 1030255916 ecr 3993892563,mptcp dss ack 1172603837543216362], length 0</span>
+<span class="go">13:43:26.649498 wlp3s0 Out IP 192.168.0.43.34801 &gt; 5.196.67.207.80: Flags [S], seq 2321572505, win 64240, options [mss 1460,sackOK,TS val 1218002018 ecr 0,nop,wscale 7,mptcp join id 8 token 0xeef7df2f nonce 0xc0d346f6], length 0</span>
+<span class="go">13:43:26.666895 wlp3s0 In  IP 5.196.67.207.80 &gt; 192.168.0.43.34801: Flags [S.], seq 1973196884, ack 2321572506, win 65160, options [mss 1460,sackOK,TS val 1030255931 ecr 1218002018,nop,wscale 7,mptcp join id 0 hmac 0xc7489cf7056428b4 nonce 0xa54f9af], length 0</span>
+<span class="go">13:43:26.666966 wlp3s0 Out IP 192.168.0.43.34801 &gt; 5.196.67.207.80: Flags [.], ack 1, win 502, options [nop,nop,TS val 1218002035 ecr 1030255931,mptcp join hmac 0xb4e6a41bf5861313df7f5f454966998ad7e698a4], length 0</span>
+<span class="go">13:43:26.677776 wlp3s0 In  IP 5.196.67.207.80 &gt; 192.168.0.43.34801: Flags [.], ack 1, win 510, options [nop,nop,TS val 1030255944 ecr 1218002035,mptcp dss ack 1172603837543216362], length 0</span>
+<span class="go">13:43:31.635023 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [P.], seq 17:18, ack 1, win 502, options [nop,nop,TS val 3993897563 ecr 1030255916,mptcp dss ack 56871338 seq 1172603837543216362 subseq 17 len 1,nop,nop], length 1: HTTP</span>
+<span class="go">13:43:31.646703 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [.], ack 18, win 509, options [nop,nop,TS val 1030260913 ecr 3993897563,mptcp dss ack 1172603837543216363], length 0</span>
+<span class="go">13:43:31.647276 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [P.], seq 1:602, ack 18, win 509, options [nop,nop,TS val 1030260914 ecr 3993897563,mptcp dss ack 1172603837543216363 seq 15012343925868579242 subseq 1 len 601,nop,nop], length 601: HTTP: HTTP/1.0 200 OK</span>
+<span class="go">13:43:31.647300 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [.], ack 602, win 501, options [nop,nop,TS val 3993897576 ecr 1030260914,mptcp dss ack 15012343925868579843], length 0</span>
+<span class="go">13:43:31.647276 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [.], ack 18, win 509, options [nop,nop,TS val 1030260914 ecr 3993897563,mptcp dss fin ack 1172603837543216363 seq 15012343925868579843 subseq 0 len 1,nop,nop], length 0</span>
+<span class="go">13:43:31.647321 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [.], ack 602, win 501, options [nop,nop,TS val 3993897576 ecr 1030260914,mptcp dss ack 15012343925868579844], length 0</span>
+<span class="go">13:43:31.647330 wlp3s0 Out IP 192.168.0.43.34801 &gt; 5.196.67.207.80: Flags [.], ack 1, win 502, options [nop,nop,TS val 1218002046 ecr 1030255944,mptcp dss ack 15012343925868579844], length 0</span>
+<span class="go">13:43:31.648565 wlp3s0 In  IP 5.196.67.207.80 &gt; 192.168.0.43.34801: Flags [.], ack 1, win 510, options [nop,nop,TS val 1030255944 ecr 1218002035,mptcp dss fin ack 1172603837543216363 seq 15012343925868579843 subseq 0 len 1,nop,nop], length 0</span>
+<span class="go">13:43:36.635392 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [.], ack 602, win 501, options [nop,nop,TS val 3993897576 ecr 1030260914,mptcp dss fin ack 15012343925868579844 seq 1172603837543216363 subseq 0 len 1,nop,nop], length 0</span>
+<span class="go">13:43:36.635416 wlp3s0 Out IP 192.168.0.43.34801 &gt; 5.196.67.207.80: Flags [.], ack 1, win 502, options [nop,nop,TS val 1218007017 ecr 1030255944,mptcp dss fin ack 15012343925868579844 seq 1172603837543216363 subseq 0 len 1,nop,nop], length 0</span>
+<span class="go">13:43:36.636468 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [.], ack 602, win 501, options [nop,nop,TS val 3993897576 ecr 1030260914,mptcp dss fin ack 15012343925868579844 seq 1172603837543216363 subseq 0 len 1,nop,nop], length 0</span>
+<span class="go">13:43:36.636482 wlp3s0 Out IP 192.168.0.43.34801 &gt; 5.196.67.207.80: Flags [.], ack 1, win 502, options [nop,nop,TS val 1218007017 ecr 1030255944,mptcp dss fin ack 15012343925868579844 seq 1172603837543216363 subseq 0 len 1,nop,nop], length 0</span>
+<span class="go">13:43:36.640425 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [.], ack 602, win 501, options [nop,nop,TS val 3993897576 ecr 1030260914,mptcp dss fin ack 15012343925868579844 seq 1172603837543216363 subseq 0 len 1,nop,nop], length 0</span>
+<span class="go">13:43:36.640431 wlp3s0 Out IP 192.168.0.43.34801 &gt; 5.196.67.207.80: Flags [.], ack 1, win 502, options [nop,nop,TS val 1218007017 ecr 1030255944,mptcp dss fin ack 15012343925868579844 seq 1172603837543216363 subseq 0 len 1,nop,nop], length 0</span>
+<span class="go">13:43:36.645605 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [.], ack 18, win 509, options [nop,nop,TS val 1030265912 ecr 3993897576,mptcp dss ack 1172603837543216364], length 0</span>
+<span class="go">13:43:36.645659 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [F.], seq 18, ack 602, win 501, options [nop,nop,TS val 3993902574 ecr 1030265912,mptcp dss ack 15012343925868579844], length 0</span>
+<span class="go">13:43:36.645674 wlp3s0 Out IP 192.168.0.43.34801 &gt; 5.196.67.207.80: Flags [F.], seq 1, ack 1, win 502, options [nop,nop,TS val 1218012014 ecr 1030255944,mptcp dss ack 15012343925868579844], length 0</span>
+<span class="go">13:43:36.646315 wlp3s0 In  IP 5.196.67.207.80 &gt; 192.168.0.43.34801: Flags [.], ack 1, win 510, options [nop,nop,TS val 1030260930 ecr 1218002046,mptcp dss ack 1172603837543216364], length 0</span>
+<span class="go">13:43:36.647699 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [F.], seq 602, ack 18, win 509, options [nop,nop,TS val 1030265912 ecr 3993897576,mptcp dss ack 1172603837543216364], length 0</span>
+<span class="go">13:43:36.647718 enp2s0 Out IP 192.168.0.37.47672 &gt; 5.196.67.207.80: Flags [.], ack 603, win 501, options [nop,nop,TS val 3993902576 ecr 1030265912,mptcp dss ack 15012343925868579844], length 0</span>
+<span class="go">13:43:36.648629 wlp3s0 In  IP 5.196.67.207.80 &gt; 192.168.0.43.34801: Flags [F.], seq 1, ack 1, win 510, options [nop,nop,TS val 1030265912 ecr 1218002046,mptcp dss ack 1172603837543216364], length 0</span>
+<span class="go">13:43:36.648649 wlp3s0 Out IP 192.168.0.43.34801 &gt; 5.196.67.207.80: Flags [.], ack 2, win 502, options [nop,nop,TS val 1218012017 ecr 1030265912,mptcp dss ack 15012343925868579844], length 0</span>
+<span class="go">13:43:36.657040 enp2s0 In  IP 5.196.67.207.80 &gt; 192.168.0.37.47672: Flags [.], ack 19, win 509, options [nop,nop,TS val 1030265923 ecr 3993902574,mptcp dss ack 1172603837543216364], length 0</span>
+<span class="go">13:43:36.662211 wlp3s0 In  IP 5.196.67.207.80 &gt; 192.168.0.43.34801: Flags [.], ack 2, win 510, options [nop,nop,TS val 1030265928 ecr 1218012014,mptcp dss ack 1172603837543216364], length 0</span>
+</pre></div>
+</div>
+<p>If your host is dual stack, you also need to do the same configuration for IPv6 as well. Our test host uses the following IPv6 addresses.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ip -6 addr show</span>
+<span class="go">1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 state UNKNOWN qlen 1000</span>
+<span class="go">    inet6 ::1/128 scope host</span>
+<span class="go">    valid_lft forever preferred_lft forever</span>
+<span class="go">2: enp2s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 state UP qlen 1000</span>
+<span class="go">    inet6 2a02:2788:10c4:123:f468:1851:9a9f:7d44/64 scope global temporary dynamic</span>
+<span class="go">    valid_lft 592298sec preferred_lft 73422sec</span>
+<span class="go">    inet6 2a02:2788:10c4:123:6636:10c6:692b:18cc/64 scope global dynamic mngtmpaddr noprefixroute</span>
+<span class="go">    valid_lft 1209600sec preferred_lft 604800sec</span>
+<span class="go">    inet6 fe80::5642:39bd:3390:43d3/64 scope link noprefixroute</span>
+<span class="go">    valid_lft forever preferred_lft forever</span>
+<span class="go">3: wlp3s0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 state UP qlen 1000</span>
+<span class="go">    inet6 2a02:2788:10c4:123:3d66:f590:d891:8fb3/64 scope global dynamic noprefixroute</span>
+<span class="go">    valid_lft 1209600sec preferred_lft 604800sec</span>
+<span class="go">    inet6 fe80::3934:7572:b1ff:b555/64 scope link noprefixroute</span>
+<span class="go">    valid_lft forever preferred_lft forever</span>
+</pre></div>
+</div>
+<p>We thus had to configure the following IPv6 routing tables. This is similar to the commands used to configure the IPv4 routing tables.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ip -6 rule add from 2a02:2788:10c4:123:6636:10c6:692b:18cc table 1</span>
+<span class="go">ip -6 rule add from 2a02:2788:10c4:123:3d66:f590:d891:8fb3 table 2</span>
+<span class="go">ip route add 2a02:2788:10c4:123::/64 dev enp2s0 scope link table 1</span>
+<span class="go">ip route add 2a02:2788:10c4:123::/64 dev wlp3s0 scope link table 2</span>
+<span class="go">ip route add default via fe80::10:18ff:fe07:fc33 dev enp2s0 table 1</span>
+<span class="go">ip route add default via fe80::10:18ff:fe07:fc33 dev wlp3s0 table 2</span>
+<span class="go">ip route add default scope global nexthop via fe80::10:18ff:fe07:fc33 dev enp2s0</span>
+</pre></div>
+</div>
+<p>Remember that if you want to create subflows using IPv6 addresses, you also need to configure the stack with <code class="docutils literal notranslate"><span class="pre">ip</span> <span class="pre">mptcp</span> <span class="pre">endpoint</span> <span class="pre">add</span></code> as you did for the IPv4 addresses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The current versions of the Linux kernel only use one address family at a time. If a connection was created using IPv4, then only IPv4 addresses will be used to create new subflows. Future versions of the kernel will allow to mix IPv4 and IPv6 subflows.</p>
+</div>
+</section>
+<section id="analyzing-the-output-of-ss">
+<h2>Analyzing the output of ss<a class="headerlink" href="#analyzing-the-output-of-ss" title="Permalink to this headline"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Modern Multipath Transport Protocols" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nstat-intro.html" class="btn btn-neutral float-right" title="Analyzing the output of nstat" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Olivier Bonaventure.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
