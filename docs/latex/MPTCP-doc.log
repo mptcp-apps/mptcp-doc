@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/Debian) (preloaded format=pdflatex 2022.7.4)  7 NOV 2022 13:47
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/Debian) (preloaded format=pdflatex 2022.7.4)  7 NOV 2022 14:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1439,9 +1439,13 @@ T1/qtm/m/n/10 ,
 
 [23]
 Package hyperref Info: bookmark level for unknown literalblock defaults to 0 on
- input line 1180.
- [24] [25] [26]
-Underfull \hbox (badness 10000) in paragraph at lines 1408--1418
+ input line 1170.
+
+Overfull \vbox (1.7593pt too high) detected at line 1242
+ []
+
+[24] [25] [26]
+Underfull \hbox (badness 10000) in paragraph at lines 1388--1398
 []\T1/qtm/m/n/10 Three coun-ters track the DSS op-tion of the in-com-ing pack-e
 ts : \T1/txtt/m/n/10 MPTcpExtDSSNotMatching\T1/qtm/m/n/10 ,
  []
@@ -1451,12 +1455,12 @@ ts : \T1/txtt/m/n/10 MPTcpExtDSSNotMatching\T1/qtm/m/n/10 ,
 ]
 Chapter 4.
 
-Overfull \hbox (1652.09486pt too wide) in paragraph at lines 1511--1511
+Overfull \hbox (1652.09486pt too wide) in paragraph at lines 1486--1486
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1511--1511
+Underfull \hbox (badness 10000) in paragraph at lines 1486--1486
 
  []
 
@@ -1465,7 +1469,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 1511--1511
 ]
 Chapter 5.
 [35] [36] [37] [38] [39] [40] [41] [42] [43] [44] [45] [46] [47] [48] [49]
-[50] [51] [52] [53] [54] [55] [56]
+[50] [51] [52] [53] [54] [55] [56] [57]
 \width=\dimen334
 \height=\dimen335
 \depth=\dimen336
@@ -1498,7 +1502,6 @@ Chapter 5.
 \height=\dimen363
 \depth=\dimen364
 \totalheight=\dimen365
- [57]
 \width=\dimen366
 \height=\dimen367
 \depth=\dimen368
@@ -1627,6 +1630,7 @@ Chapter 5.
 \height=\dimen491
 \depth=\dimen492
 \totalheight=\dimen493
+ [58]
 \width=\dimen494
 \height=\dimen495
 \depth=\dimen496
@@ -1767,15 +1771,11 @@ Chapter 5.
 \height=\dimen631
 \depth=\dimen632
 \totalheight=\dimen633
- [58]
-Underfull \vbox (badness 10000) detected at line 2546
+ [59]
+Underfull \vbox (badness 2486) detected at line 2506
  []
 
-
-Overfull \vbox (1.32802pt too high) detected at line 2546
- []
-
-[59]
+[60]
 \width=\dimen634
 \height=\dimen635
 \depth=\dimen636
@@ -2396,7 +2396,7 @@ Overfull \vbox (1.32802pt too high) detected at line 2546
 \height=\dimen1251
 \depth=\dimen1252
 \totalheight=\dimen1253
- [60]
+ [61]
 \width=\dimen1254
 \height=\dimen1255
 \depth=\dimen1256
@@ -2545,7 +2545,7 @@ Overfull \vbox (1.32802pt too high) detected at line 2546
 \height=\dimen1399
 \depth=\dimen1400
 \totalheight=\dimen1401
- [61]
+ [62] [63]
 \width=\dimen1402
 \height=\dimen1403
 \depth=\dimen1404
@@ -2618,7 +2618,6 @@ Overfull \vbox (1.32802pt too high) detected at line 2546
 \height=\dimen1471
 \depth=\dimen1472
 \totalheight=\dimen1473
- [62]
 \width=\dimen1474
 \height=\dimen1475
 \depth=\dimen1476
@@ -2908,7 +2907,7 @@ Overfull \vbox (1.32802pt too high) detected at line 2546
 \depth=\dimen1760
 \totalheight=\dimen1761
 
-Overfull \hbox (0.83pt too wide) in paragraph at lines 2724--2724
+Overfull \hbox (0.83pt too wide) in paragraph at lines 2684--2684
  []\T1/qtm/m/n/10 H 
  []
 
@@ -2961,7 +2960,7 @@ Overfull \hbox (0.83pt too wide) in paragraph at lines 2724--2724
 \depth=\dimen1808
 \totalheight=\dimen1809
 
-Overfull \hbox (0.83pt too wide) in paragraph at lines 2732--2732
+Overfull \hbox (0.83pt too wide) in paragraph at lines 2692--2692
  []\T1/qtm/m/n/10 H 
  []
 
@@ -3018,7 +3017,7 @@ Overfull \hbox (0.83pt too wide) in paragraph at lines 2732--2732
 \depth=\dimen1860
 \totalheight=\dimen1861
 
-Overfull \hbox (0.83pt too wide) in paragraph at lines 2741--2741
+Overfull \hbox (0.83pt too wide) in paragraph at lines 2701--2701
  []\T1/qtm/m/n/10 H 
  []
 
@@ -3079,7 +3078,7 @@ Overfull \hbox (0.83pt too wide) in paragraph at lines 2741--2741
 \depth=\dimen1916
 \totalheight=\dimen1917
 
-Overfull \hbox (0.83pt too wide) in paragraph at lines 2751--2751
+Overfull \hbox (0.83pt too wide) in paragraph at lines 2711--2711
  []\T1/qtm/m/n/10 H 
  []
 
@@ -3155,11 +3154,11 @@ Overfull \hbox (0.83pt too wide) in paragraph at lines 2751--2751
 \height=\dimen1987
 \depth=\dimen1988
 \totalheight=\dimen1989
-[63] [64] [65] [66
-
-]
+[64] [65] [66]
 Chapter 6.
-[67] [68
+[67
+
+] [68
 
 ]
 Chapter 7.
@@ -3177,10 +3176,10 @@ Package rerunfilecheck Info: File `MPTCP-doc.out' has not changed.
 (rerunfilecheck)             Checksum: FD92163AF1BD3364F692DC735723D909;5014.
  ) 
 Here is how much of TeX's memory you used:
- 38188 strings out of 479304
- 863642 string characters out of 5869780
- 2739440 words of memory out of 5000000
- 54359 multiletter control sequences out of 15000+600000
+ 38180 strings out of 479304
+ 863521 string characters out of 5869780
+ 2739033 words of memory out of 5000000
+ 54351 multiletter control sequences out of 15000+600000
  466767 words of font info for 85 fonts, out of 8000000 for 9000
  1142 hyphenation exceptions out of 8191
  102i,19n,102p,2647b,858s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -3203,7 +3202,7 @@ e/texmf-dist/fonts/type1/public/txfonts/t1xbtt.pfb></usr/share/texlive/texmf-di
 st/fonts/type1/public/txfonts/t1xtt.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/public/txfonts/t1xtt.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
 txfonts/tcxtt.pfb>
-Output written on MPTCP-doc.pdf (79 pages, 466511 bytes).
+Output written on MPTCP-doc.pdf (79 pages, 465361 bytes).
 PDF statistics:
  989 PDF objects out of 1000 (max. 8388607)
  858 compressed objects within 9 object streams

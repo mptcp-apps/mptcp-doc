@@ -1165,16 +1165,6 @@ is not present in this \sphinxcode{\sphinxupquote{ACK}}, then the \sphinxcode{\s
 gets incremented.
 If this counter increases, it probably indicates some interference with a
 middlebox that injects acknowledgments during the three\sphinxhyphen{}way handshake.
-
-\begin{sphinxadmonition}{note}{\label{\detokenize{nstat-mptcp:id1}}Todo:}
-\sphinxAtStartPar
-find example ?
-\end{sphinxadmonition}
-
-\begin{sphinxadmonition}{note}{\label{\detokenize{nstat-mptcp:id2}}Todo:}
-\sphinxAtStartPar
-MPTcpExtMPFallbackTokenInit  seems related to the failure of getting a token during the handshake (e.g. because there are too many tokens already or not enough randomness), but there are cases in subflow joins where this counter is also incremented
-\end{sphinxadmonition}
 \sphinxSetupCaptionForVerbatim{The MPCapable counters (active opens)}
 \def\sphinxLiteralBlockLabel{\label{\detokenize{nstat-mptcp:id6}}}
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
@@ -1276,11 +1266,6 @@ investigated by collecting packet traces.
 \PYG{g+go}{                         ||}
 \end{sphinxVerbatim}
 
-\begin{sphinxadmonition}{note}{\label{\detokenize{nstat-mptcp:id3}}Todo:}
-\sphinxAtStartPar
-This part is unclear and needs to be checked based on the tests
-\end{sphinxadmonition}
-
 \sphinxAtStartPar
 A Multipath TCP host will usually accept additional subflows on the address
 and ports where the initial subflow was accepted. The following counters
@@ -1341,11 +1326,6 @@ addresses owned by a remote peer. Mobile hosts are likely to send these
 options when they move from one type of network to another. The
 \sphinxcode{\sphinxupquote{MPTcpExtRmAddrDrop}} is incremented when the path manager cannot process an
 incoming \sphinxcode{\sphinxupquote{RM\_ADDR}} option.
-
-\begin{sphinxadmonition}{note}{\label{\detokenize{nstat-mptcp:id4}}Todo:}
-\sphinxAtStartPar
-is this a rare event ?
-\end{sphinxadmonition}
 
 \sphinxAtStartPar
 When a host receives a \sphinxcode{\sphinxupquote{RM\_ADDR}} option from a remote peer, its path
@@ -1424,11 +1404,6 @@ earlier. Such duplicated data can occur with Multipath TCP when data
 sent over a subflow is retransmitted over another subflow. It would
 be interesting to follow the evolution of this counter on a server that
 interacts with mobile devices.
-
-\begin{sphinxadmonition}{note}{\label{\detokenize{nstat-mptcp:id5}}Todo:}
-\sphinxAtStartPar
-check with Matthieu
-\end{sphinxadmonition}
 
 \sphinxAtStartPar
 Multipath TCP tracks losses on the subflows that compose a Multipath
@@ -2078,11 +2053,6 @@ a random nonce
 \sphinxAtStartPar
 The client has derived the token from the key announced by the server in the \sphinxcode{\sphinxupquote{MP\_CAPABLE}} option of the \sphinxcode{\sphinxupquote{SYN+ACK}} segment on the initial subflow. Thanks to this token, the server knows to which Multipath TCP connection the new subflow needs to be attached.
 
-\begin{sphinxadmonition}{note}{\label{\detokenize{mptcp:id24}}Todo:}
-\sphinxAtStartPar
-discuss security concerns
-\end{sphinxadmonition}
-
 \sphinxAtStartPar
 The server uses the random nonce sent by the client and its own random nonce to prove its knowledge of the keys exchanged during the initial handshake. The server computes \(HMAC(Key=(Server_{key}||Client_{key}), Msg=(nonce_{Server}||nonce_{Client}))\), where \sphinxcode{\sphinxupquote{||}} denotes the concatenation operation. It then returns the high order 64 bits of this HMAC in the \sphinxcode{\sphinxupquote{MP\_JOIN}} option of the \sphinxcode{\sphinxupquote{SYN+ACK}} segment together with its 32 bits nonce. The client computes \(HMAC(Key=(Client_{key}||Server_{key}), Msg=(nonce_{Client}||nonce_{Server}))\) and sends the 160 bits HMAC in the \sphinxcode{\sphinxupquote{ACK}} segment.
 \begin{figure}[htbp]\centering\capstart\begin{tikzpicture}
@@ -2312,11 +2282,6 @@ figure from slide
 
 \section{Congestion control}
 \label{\detokenize{mptcp:congestion-control}}\label{\detokenize{mptcp:mptcp-congestion}}
-\begin{sphinxadmonition}{note}{\label{\detokenize{mptcp:id27}}Todo:}
-\sphinxAtStartPar
-explain basic idea and the problem of having
-\end{sphinxadmonition}
-
 
 \subsection{LIA}
 \label{\detokenize{mptcp:lia}}
@@ -2344,11 +2309,6 @@ explain basic idea and the problem of having
 
 \section{Connection release}
 \label{\detokenize{mptcp:connection-release}}\label{\detokenize{mptcp:mptcp-release}}
-\begin{sphinxadmonition}{note}{\label{\detokenize{mptcp:id33}}Todo:}
-\sphinxAtStartPar
-keepalive and end of a connection
-\end{sphinxadmonition}
-
 \sphinxAtStartPar
 A TCP connection starts with a three\sphinxhyphen{}way handshake and ends with either the exchange of \sphinxcode{\sphinxupquote{FIN}} packets to gracefully terminate the connection or when one of the hosts sends a \sphinxcode{\sphinxupquote{RST}} packet. The main benefit of the graceful termination is that both hosts receive the confirmation that all the data that they have sent over the connection has been correctly received. Multipath also supports a graceful termination of the connection. As in regular TCP, this graceful termination is implemented by using a flag that indicates the end of the bytestream. This flag is included in the Data Sequence Number option.
 

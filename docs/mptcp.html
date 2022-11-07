@@ -224,10 +224,6 @@
 </ul>
 </div></blockquote>
 <p>The client has derived the token from the key announced by the server in the <code class="docutils literal notranslate"><span class="pre">MP_CAPABLE</span></code> option of the <code class="docutils literal notranslate"><span class="pre">SYN+ACK</span></code> segment on the initial subflow. Thanks to this token, the server knows to which Multipath TCP connection the new subflow needs to be attached.</p>
-<div class="admonition-todo admonition" id="id24">
-<p class="admonition-title">Todo</p>
-<p>discuss security concerns</p>
-</div>
 <p>The server uses the random nonce sent by the client and its own random nonce to prove its knowledge of the keys exchanged during the initial handshake. The server computes <span class="math notranslate nohighlight">\(HMAC(Key=(Server_{key}||Client_{key}), Msg=(nonce_{Server}||nonce_{Client}))\)</span>, where <code class="docutils literal notranslate"><span class="pre">||</span></code> denotes the concatenation operation. It then returns the high order 64 bits of this HMAC in the <code class="docutils literal notranslate"><span class="pre">MP_JOIN</span></code> option of the <code class="docutils literal notranslate"><span class="pre">SYN+ACK</span></code> segment together with its 32 bits nonce. The client computes <span class="math notranslate nohighlight">\(HMAC(Key=(Client_{key}||Server_{key}), Msg=(nonce_{Client}||nonce_{Server}))\)</span> and sends the 160 bits HMAC in the <code class="docutils literal notranslate"><span class="pre">ACK</span></code> segment.</p>
 <div class="figure" id="id65" style="text-align: center">
 <span id="fig-mptcp-join"></span><p><img  src="_images/tikz-eefcb7d64afe220501f146912b9992a9f23ee8fd.png" alt="Figure made with TikZ" /></p>
@@ -296,10 +292,6 @@
 </div></section>
 <section id="congestion-control">
 <span id="mptcp-congestion"></span><h2>Congestion control<a class="headerlink" href="#congestion-control" title="Permalink to this headline"></a></h2>
-<div class="admonition-todo admonition" id="id27">
-<p class="admonition-title">Todo</p>
-<p>explain basic idea and the problem of having</p>
-</div>
 <section id="lia">
 <h3>LIA<a class="headerlink" href="#lia" title="Permalink to this headline"></a></h3>
 <p><span id="id28">[<a class="reference internal" href="biblio.html#id8932" title="Damon Wischik, Costin Raiciu, Adam Greenhalgh, and Mark Handley. Design, implementation and evaluation of congestion control for Multipath TCP. In Proceedings of the 8th USENIX Conference on Networked Systems Design and Implementation, NSDI'11, 99–112. Berkeley, CA, USA, 2011. USENIX Association. URL: http://dl.acm.org/citation.cfm?id=1972457.1972468.">19</a>]</span> and <span id="id29">[<a class="reference internal" href="biblio.html#id6203" title="C. Raiciu, M. Handley, and D. Wischik. Coupled Congestion Control for Multipath Transport Protocols. RFC 6356 (Experimental), October 2011. URL: https://www.rfc-editor.org/rfc/rfc6356.txt, doi:10.17487/RFC6356.">20</a>]</span></p>
@@ -319,10 +311,6 @@
 </section>
 <section id="connection-release">
 <span id="mptcp-release"></span><h2>Connection release<a class="headerlink" href="#connection-release" title="Permalink to this headline"></a></h2>
-<div class="admonition-todo admonition" id="id33">
-<p class="admonition-title">Todo</p>
-<p>keepalive and end of a connection</p>
-</div>
 <p>A TCP connection starts with a three-way handshake and ends with either the exchange of <code class="docutils literal notranslate"><span class="pre">FIN</span></code> packets to gracefully terminate the connection or when one of the hosts sends a <code class="docutils literal notranslate"><span class="pre">RST</span></code> packet. The main benefit of the graceful termination is that both hosts receive the confirmation that all the data that they have sent over the connection has been correctly received. Multipath also supports a graceful termination of the connection. As in regular TCP, this graceful termination is implemented by using a flag that indicates the end of the bytestream. This flag is included in the Data Sequence Number option.</p>
 <p><a class="reference internal" href="#fig-mptcp-close"><span class="std std-numref">Fig. 31</span></a> illustrates a graceful Multipath TCP connection release. We assume that the connection has two active subflows. The client sends <code class="docutils literal notranslate"><span class="pre">XYZ</span></code> over the initial subflow. Since this is the last byte sent over the bytestream, it adds the <code class="docutils literal notranslate"><span class="pre">DATA_FIN</span></code> flag to the data sequence option. This flag consumes one data sequence number as the <code class="docutils literal notranslate"><span class="pre">FIN</span></code> flag in the TCP header. The server returns an acknowledgment that confirms the reception of the three bytes at the subflow level (<code class="docutils literal notranslate"><span class="pre">ack=x+3</span></code>). At the connection level, four sequence numbers are acknowledged (<code class="docutils literal notranslate"><span class="pre">a=y+4</span></code>) since the <code class="docutils literal notranslate"><span class="pre">DATA_FIN</span></code> flag consumes one sequence number. The server decides to close its bytestream by sending its last byte, <code class="docutils literal notranslate"><span class="pre">M</span></code>, over the second subflow with the <code class="docutils literal notranslate"><span class="pre">DATA_FIN</span></code> flag set. At this point, the Multipath TCP has been gracefully closed. No data will be exchanged over the different subflows. The client and/or the server can terminate the subflows by using packets with either the <code class="docutils literal notranslate"><span class="pre">FIN</span></code> or the <code class="docutils literal notranslate"><span class="pre">RST</span></code> flag in the TCP header.</p>
 <div class="figure" id="id73" style="text-align: center">

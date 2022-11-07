@@ -21,11 +21,11 @@
 \contentsline {section}{\numberline {5.5}Congestion control}{53}{section.5.5}%
 \contentsline {subsection}{\numberline {5.5.1}LIA}{53}{subsection.5.5.1}%
 \contentsline {subsection}{\numberline {5.5.2}OLIA}{53}{subsection.5.5.2}%
-\contentsline {subsection}{\numberline {5.5.3}BALIA}{53}{subsection.5.5.3}%
+\contentsline {subsection}{\numberline {5.5.3}BALIA}{55}{subsection.5.5.3}%
 \contentsline {subsection}{\numberline {5.5.4}MPCC}{55}{subsection.5.5.4}%
 \contentsline {section}{\numberline {5.6}Connection release}{55}{section.5.6}%
-\contentsline {section}{\numberline {5.7}Coping with middlebox interference}{57}{section.5.7}%
-\contentsline {section}{\numberline {5.8}The protocol details}{63}{section.5.8}%
+\contentsline {section}{\numberline {5.7}Coping with middlebox interference}{56}{section.5.7}%
+\contentsline {section}{\numberline {5.8}The protocol details}{64}{section.5.8}%
 \contentsline {chapter}{\numberline {6}Bibliography}{67}{chapter.6}%
 \contentsline {chapter}{\numberline {7}Indices and tables}{69}{chapter.7}%
 \contentsline {chapter}{Bibliography}{71}{chapter*.3}%
