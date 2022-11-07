@@ -159,6 +159,7 @@ html_context = {
   'github_user': 'mptcp-apps',
   'github_repo': 'mptcp-doc',
   'github_version': 'main',
+  'conf_py_path': '/'
 }
 
 #github_url = '
