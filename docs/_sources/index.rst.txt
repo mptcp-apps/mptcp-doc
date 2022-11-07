@@ -1,8 +1,8 @@
 .. Multipath TCP documentation
 
    
-Welcome to Modern Multipath Transport Protocols
-===============================================
+Multipath TCP
+=============
 
 .. toctree::
    :maxdepth: 2
