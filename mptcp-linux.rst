@@ -387,4 +387,6 @@ Analyzing the output of ss
 
    ss 
 
+.. include:: nstat-intro.rst
 
+.. include:: nstat-mptcp.rst

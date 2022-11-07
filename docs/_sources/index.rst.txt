@@ -14,8 +14,6 @@ Multipath TCP is a major extension ot the TCP protocol which is used by the majo
 	     
    usecases
    mptcp-linux
-   nstat-intro
-   nstat-mptcp
    mptcp-apple
    tcp
    mptcp

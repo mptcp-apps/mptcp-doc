@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/Debian) (preloaded format=pdflatex 2022.7.4)  7 NOV 2022 18:14
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/Debian) (preloaded format=pdflatex 2022.7.4)  7 NOV 2022 18:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1319,21 +1319,21 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2
 
 
-] (./MPTCP-doc.toc [1
-
-])
+] (./MPTCP-doc.toc)
 \tf@toc=\write7
 \openout7 = `MPTCP-doc.toc'.
 
- [2]
+ [1
+
+] [2
+
+]
 LaTeX Font Info:    Trying to load font information for T1+txtt on input line 8
 9.
 
 (/usr/share/texlive/texmf-dist/tex/latex/txfonts/t1txtt.fd
 File: t1txtt.fd 2000/12/15 v3.1
-) [1
-
-] [2
+) [1] [2
 
 ]
 Chapter 1.
@@ -1364,15 +1364,28 @@ Underfull \vbox (badness 10000) detected at line 586
 Overfull \vbox (23.67393pt too high) detected at line 586
  []
 
-[16] [17] [18
-
-]
-Chapter 3.
+[16] [17]
 LaTeX Font Info:    Trying to load font information for TS1+txtt on input line 
 718.
-(/usr/share/texlive/texmf-dist/tex/latex/txfonts/ts1txtt.fd
+ (/usr/share/texlive/texmf-dist/tex/latex/txfonts/ts1txtt.fd
 File: ts1txtt.fd 2000/12/15 v3.1
-) [19] [20]
+) [18]
+Underfull \vbox (badness 10000) detected at line 1104
+ []
+
+
+Underfull \vbox (badness 10000) detected at line 1104
+ []
+
+[19]
+Underfull \vbox (badness 10000) detected at line 1104
+ []
+
+
+Underfull \vbox (badness 10000) detected at line 1104
+ []
+
+[20]
 Underfull \vbox (badness 10000) detected at line 1104
  []
 
@@ -1404,31 +1417,11 @@ Underfull \vbox (badness 10000) detected at line 1104
 Underfull \vbox (badness 10000) detected at line 1104
  []
 
-[24]
-Underfull \vbox (badness 10000) detected at line 1104
- []
-
-
-Underfull \vbox (badness 10000) detected at line 1104
- []
-
-[25]
-Underfull \vbox (badness 10000) detected at line 1104
- []
-
-
-Underfull \vbox (badness 10000) detected at line 1104
- []
-
-[26]
+[24] [25]
 LaTeX Font Info:    Font shape `T1/txtt/m/it' in size <10> not available
 (Font)              Font shape `T1/txtt/m/sl' tried instead on input line 1120.
 
- [27] [28] [29] [30
-
-]
-Chapter 4.
-
+ [26] [27]
 Underfull \hbox (badness 10000) in paragraph at lines 1266--1273
 \T1/qtm/m/n/10 This group gath-ers the fol-low-ing coun-ters: \T1/txtt/m/n/10 M
 PTcpExtMPCapableSYNRX\T1/qtm/m/n/10 , \T1/txtt/m/n/10 MPTcpExtMPCapableSYNTX\T1
@@ -1442,25 +1435,20 @@ ExtMPCapableACKRX\T1/qtm/m/n/10 , \T1/txtt/m/n/10 MPTcpExtMPCapableFallbackACK\
 T1/qtm/m/n/10 ,
  []
 
-[31]
 Package hyperref Info: bookmark level for unknown literalblock defaults to 0 on
  input line 1314.
-
-Overfull \vbox (1.7593pt too high) detected at line 1386
- []
-
-[32] [33] [34]
+[28] [29] [30]
 Underfull \hbox (badness 10000) in paragraph at lines 1532--1542
 []\T1/qtm/m/n/10 Three coun-ters track the DSS op-tion of the in-com-ing pack-e
 ts : \T1/txtt/m/n/10 MPTcpExtDSSNotMatching\T1/qtm/m/n/10 ,
  []
 
-[35] [36
+[31] [32
 
 ]
-Chapter 5.
-[37] [38]
-Chapter 6.
+Chapter 3.
+[33] [34]
+Chapter 4.
 
 Overfull \hbox (1652.09486pt too wide) in paragraph at lines 1724--1724
 []
@@ -1471,14 +1459,14 @@ Underfull \hbox (badness 10000) in paragraph at lines 1724--1724
 
  []
 
-[39
+[35
 
-] [40] [41] [42] [43] [44
+] [36] [37] [38] [39] [40
 
 ]
-Chapter 7.
-[45] [46] [47] [48] [49] [50] [51] [52] [53] [54] [55] [56] [57] [58] [59]
-[60] [61] [62] [63] [64] [65] [66] [67]
+Chapter 5.
+[41] [42] [43] [44] [45] [46] [47] [48] [49] [50] [51] [52] [53] [54] [55]
+[56] [57] [58] [59] [60] [61] [62] [63]
 \width=\dimen334
 \height=\dimen335
 \depth=\dimen336
@@ -1639,7 +1627,7 @@ Chapter 7.
 \height=\dimen491
 \depth=\dimen492
 \totalheight=\dimen493
- [68]
+ [64]
 \width=\dimen494
 \height=\dimen495
 \depth=\dimen496
@@ -1780,11 +1768,11 @@ Chapter 7.
 \height=\dimen631
 \depth=\dimen632
 \totalheight=\dimen633
- [69]
+ [65]
 Underfull \vbox (badness 2486) detected at line 2744
  []
 
-[70]
+[66]
 \width=\dimen634
 \height=\dimen635
 \depth=\dimen636
@@ -2405,7 +2393,7 @@ Underfull \vbox (badness 2486) detected at line 2744
 \height=\dimen1251
 \depth=\dimen1252
 \totalheight=\dimen1253
- [71]
+ [67]
 \width=\dimen1254
 \height=\dimen1255
 \depth=\dimen1256
@@ -2554,7 +2542,7 @@ Underfull \vbox (badness 2486) detected at line 2744
 \height=\dimen1399
 \depth=\dimen1400
 \totalheight=\dimen1401
- [72] [73]
+ [68] [69]
 \width=\dimen1402
 \height=\dimen1403
 \depth=\dimen1404
@@ -3163,15 +3151,15 @@ Overfull \hbox (0.83pt too wide) in paragraph at lines 2949--2949
 \height=\dimen1987
 \depth=\dimen1988
 \totalheight=\dimen1989
-[74] [75] [76]
-Chapter 8.
-[77
+[70] [71] [72]
+Chapter 6.
+[73
 
-] [78
+] [74
 
 ]
-Chapter 9.
-[79] [80
+Chapter 7.
+[75] [76
 
 ]
 Underfull \hbox (badness 6364) in paragraph at lines 3009--3011
@@ -3179,22 +3167,22 @@ Underfull \hbox (badness 6364) in paragraph at lines 3009--3011
 RFC 4960 (Pro-posed Stan-dard), Septem-
  []
 
-[81
+[77
 
-] [82] (./MPTCP-doc.ind [83] [84
+] [78] (./MPTCP-doc.ind [79] [80
 
-] [85
+] [81
 
 
 ]) (./MPTCP-doc.aux)
 Package rerunfilecheck Info: File `MPTCP-doc.out' has not changed.
-(rerunfilecheck)             Checksum: 01B36C06EA079A1F8B2B0D49AD883B28;6884.
+(rerunfilecheck)             Checksum: 6771A320470003C323AFBED15F54C5B7;6955.
  ) 
 Here is how much of TeX's memory you used:
- 38267 strings out of 479304
- 864966 string characters out of 5869780
- 2740729 words of memory out of 5000000
- 54411 multiletter control sequences out of 15000+600000
+ 38261 strings out of 479304
+ 864984 string characters out of 5869780
+ 2760433 words of memory out of 5000000
+ 54409 multiletter control sequences out of 15000+600000
  466767 words of font info for 85 fonts, out of 8000000 for 9000
  1142 hyphenation exceptions out of 8191
  102i,19n,102p,2647b,858s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -3217,10 +3205,10 @@ e/texmf-dist/fonts/type1/public/txfonts/t1xbtt.pfb></usr/share/texlive/texmf-di
 st/fonts/type1/public/txfonts/t1xtt.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/public/txfonts/t1xtt.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
 txfonts/tcxtt.pfb>
-Output written on MPTCP-doc.pdf (89 pages, 495869 bytes).
+Output written on MPTCP-doc.pdf (85 pages, 493795 bytes).
 PDF statistics:
- 1126 PDF objects out of 1200 (max. 8388607)
- 984 compressed objects within 10 object streams
- 230 named destinations out of 1000 (max. 500000)
+ 1102 PDF objects out of 1200 (max. 8388607)
+ 964 compressed objects within 10 object streams
+ 226 named destinations out of 1000 (max. 500000)
  449 words of extra memory for PDF output out of 10000 (max. 10000000)
 

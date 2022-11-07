@@ -632,8 +632,8 @@ The current versions of the Linux kernel only use one address family at a time. 
 \section{Analyzing the output of ss}
 \label{\detokenize{mptcp-linux:analyzing-the-output-of-ss}}
 
-\chapter{Analyzing the output of nstat}
-\label{\detokenize{nstat-intro:analyzing-the-output-of-nstat}}\label{\detokenize{nstat-intro::doc}}
+\section{Analyzing the output of nstat}
+\label{\detokenize{mptcp-linux:analyzing-the-output-of-nstat}}
 \sphinxAtStartPar
 The Linux TCP/IP stack maintains a lot of counters that track various
 events inside the kernel. These counters are very useful for system
@@ -692,8 +692,8 @@ Some of these counters are part of the Management Information Bases (MIB) define
 within the IETF, e.g. \index{RFC@\spxentry{RFC}!RFC 1213@\spxentry{RFC 1213}}\sphinxhref{https://tools.ietf.org/html/rfc1213.html}{\sphinxstylestrong{RFC 1213}} for IPv4 and ICMPv4, \index{RFC@\spxentry{RFC}!RFC 4293@\spxentry{RFC 4293}}\sphinxhref{https://tools.ietf.org/html/rfc4293.html}{\sphinxstylestrong{RFC 4293}} for IPv6 and ICMPv6,  \index{RFC@\spxentry{RFC}!RFC 4022@\spxentry{RFC 4022}}\sphinxhref{https://tools.ietf.org/html/rfc4022.html}{\sphinxstylestrong{RFC 4022}} for TCP, \index{RFC@\spxentry{RFC}!RFC 4113@\spxentry{RFC 4113}}\sphinxhref{https://tools.ietf.org/html/rfc4113.html}{\sphinxstylestrong{RFC 4113}} for UDP. As of this writing, there is no official IETF MIB for Multipath TCP.
 
 
-\section{Using nstat}
-\label{\detokenize{nstat-intro:using-nstat}}
+\subsection{Using nstat}
+\label{\detokenize{mptcp-linux:using-nstat}}
 \sphinxAtStartPar
 In this document, we describe the counters that are exposed by
 \sphinxhref{https://www.man7.org/linux/man-pages/man8/nstat.8.html}{nstat}
@@ -1135,8 +1135,8 @@ representation of SNMP variables can be really useful to understand the
 meaning of the Linux networking counters.
 
 
-\section{The Case diagrams}
-\label{\detokenize{nstat-intro:the-case-diagrams}}
+\subsection{The Case diagrams}
+\label{\detokenize{mptcp-linux:the-case-diagrams}}
 \sphinxAtStartPar
 The \index{Case diagrams@\spxentry{Case diagrams}}Case diagrams were introduced by Jeffrey Case and Craig
 Partridge in 1989 in the paper \sphinxhref{https://doi.org/10.1145/66093.66094}{Case diagrams: a first step to diagrammed
@@ -1237,8 +1237,8 @@ does not match one of the transport layers supported by the stack
 counter is incremented.
 
 
-\chapter{The Multipath TCP counters}
-\label{\detokenize{nstat-mptcp:the-multipath-tcp-counters}}\label{\detokenize{nstat-mptcp::doc}}
+\section{The Multipath TCP counters}
+\label{\detokenize{mptcp-linux:the-multipath-tcp-counters}}
 \sphinxAtStartPar
 Linux version 5.18 maintains 46 counters for Multipath TCP. These counters
 correspond to different parts of the protocol and can be organized in four
@@ -1261,8 +1261,8 @@ the IETF published version 1 in \index{RFC@\spxentry{RFC}!RFC 8684@\spxentry{RFC
 correspond to this version of Multipath TCP.
 
 
-\section{The MPCapable counters}
-\label{\detokenize{nstat-mptcp:the-mpcapable-counters}}
+\subsection{The MPCapable counters}
+\label{\detokenize{mptcp-linux:the-mpcapable-counters}}
 \sphinxAtStartPar
 This group gathers the following counters: \sphinxcode{\sphinxupquote{MPTcpExtMPCapableSYNRX}},
 \sphinxcode{\sphinxupquote{MPTcpExtMPCapableSYNTX}}, \sphinxcode{\sphinxupquote{MPTcpExtMPCapableSYNACKRX}},
@@ -1310,7 +1310,7 @@ gets incremented.
 If this counter increases, it probably indicates some interference with a
 middlebox that injects acknowledgments during the three\sphinxhyphen{}way handshake.
 \sphinxSetupCaptionForVerbatim{The MPCapable counters (active opens)}
-\def\sphinxLiteralBlockLabel{\label{\detokenize{nstat-mptcp:id6}}}
+\def\sphinxLiteralBlockLabel{\label{\detokenize{mptcp-linux:id14}}}
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+go}{                         ||}
 \PYG{g+go}{                         ||}
@@ -1325,7 +1325,7 @@ middlebox that injects acknowledgments during the three\sphinxhyphen{}way handsh
 \PYG{g+go}{                         ||}
 \end{sphinxVerbatim}
 \sphinxSetupCaptionForVerbatim{The MPCapable counters (passive opens)}
-\def\sphinxLiteralBlockLabel{\label{\detokenize{nstat-mptcp:id7}}}
+\def\sphinxLiteralBlockLabel{\label{\detokenize{mptcp-linux:id15}}}
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+go}{                         ||}
 \PYG{g+go}{                         ||}
@@ -1341,8 +1341,8 @@ middlebox that injects acknowledgments during the three\sphinxhyphen{}way handsh
 \end{sphinxVerbatim}
 
 
-\section{The Join counters}
-\label{\detokenize{nstat-mptcp:the-join-counters}}
+\subsection{The Join counters}
+\label{\detokenize{mptcp-linux:the-join-counters}}
 \sphinxAtStartPar
 There are thirteen counters in this group. They are incremented when a host
 processes \sphinxcode{\sphinxupquote{SYN}} packets corresponding to additional subflows.
@@ -1368,7 +1368,7 @@ If the two other counters, \sphinxcode{\sphinxupquote{MPTcpExtMPJoinNoTokenFound
 \sphinxcode{\sphinxupquote{MPTcpExtMPJoinAckHMacFailure}} increase, then the system administrator
 should probably investigate as these are indication of possible attacks.
 \sphinxSetupCaptionForVerbatim{The Join counters when accepting subflows}
-\def\sphinxLiteralBlockLabel{\label{\detokenize{nstat-mptcp:id8}}}
+\def\sphinxLiteralBlockLabel{\label{\detokenize{mptcp-linux:id16}}}
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+go}{                         ||}
 \PYG{g+go}{                         ||}
@@ -1398,7 +1398,7 @@ invalid, the \sphinxcode{\sphinxupquote{MPTcpExtMPJoinSynAckHMacFailure}} is inc
 should rarely increase. If it increases, then the problem should be
 investigated by collecting packet traces.
 \sphinxSetupCaptionForVerbatim{The Join counters when initiating subflows}
-\def\sphinxLiteralBlockLabel{\label{\detokenize{nstat-mptcp:id9}}}
+\def\sphinxLiteralBlockLabel{\label{\detokenize{mptcp-linux:id17}}}
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+go}{                         ||}
 \PYG{g+go}{                         ||}
@@ -1442,8 +1442,8 @@ The \sphinxcode{\sphinxupquote{MPTcpExtMPPrioRx}} counter is incremented by each
 option.
 
 
-\section{The address advertisement counters}
-\label{\detokenize{nstat-mptcp:the-address-advertisement-counters}}
+\subsection{The address advertisement counters}
+\label{\detokenize{mptcp-linux:the-address-advertisement-counters}}
 \sphinxAtStartPar
 There are six counters in this group. The advertisement of addresses by
 Multipath TCP is described in ref:\sphinxtitleref{Address management \textless{}mmtpbook:mptcp\sphinxhyphen{}addr\sphinxhyphen{}management\textgreater{}}.
@@ -1478,8 +1478,8 @@ manager should remove the subflows associated with this address. The
 been destroyed by a path manager.
 
 
-\section{The connection termination counters}
-\label{\detokenize{nstat-mptcp:the-connection-termination-counters}}
+\subsection{The connection termination counters}
+\label{\detokenize{mptcp-linux:the-connection-termination-counters}}
 \sphinxAtStartPar
 There are seven counters in this group. They track the abnormal termination of
 a Multipath TCP connection. A normal Multipath TCP connection should end
@@ -1517,8 +1517,8 @@ transmission of the \sphinxcode{\sphinxupquote{RST}}. The \sphinxcode{\sphinxupq
 counters track the transmission and the reception of such \sphinxcode{\sphinxupquote{RST}} packets.
 
 
-\section{The other counters}
-\label{\detokenize{nstat-mptcp:the-other-counters}}
+\subsection{The other counters}
+\label{\detokenize{mptcp-linux:the-other-counters}}
 \sphinxAtStartPar
 The remaining eleven counters are mainly related to processing of data.
 
