@@ -1,11 +1,13 @@
+.. _chapter-linux:
+
 Using Multipath TCP on recent Linux kernels
 ===========================================
 
-The first version of Multipath TCP on Linux was an off-tree patch intially developed by UCLouvain researchers :cite:`mptcp-kernel`. This implementation was initially the reference implementation of Multipath TCP. It influenced the design of the protocol as new features were always tested on this implementation.
+The first version of Multipath TCP on Linux was an off-tree patch intially developed by UCLouvain researchers :cite:`mptcp-kernel`. This implementation was initially the reference implementation of Multipath TCP. It influenced the design of the protocol as new features were always tested on this implementation. You can find additional information about this implementation on `https://www.multipath-tcp.org <https://www.multipath-tcp.org>`_.
 
 Starting with version 5.6, the official Linux kernel includes support for Multipath TCP. The set of features supported by this implementation has increased over time as shown by its `ChangeLog <https://github.com/multipath-tcp/mptcp_net-next/wiki>`_.
 
-To avoid any interference with regular TCP, this implementation only creates a Multipath TCP connection if the application has created its ``socket`` using the ``IPPROTO_MPTCP`` protocol. Applications will probably be modified in the coming months and years to add specific support for Multipath TCP, but in the mean time, the Multipath TCP developers have created a work around to force legacy applications to use Multipath TCP with the ``mptcpize`` command which is bundled with the `mptcpd <https://intel.github.io/mptcpd/>`_ daemon. We use this solution in this section.
+To avoid any interference with regular TCP, this implementation only creates a Multipath TCP connection if the application has created its ``socket`` using the ``IPPROTO_MPTCP`` protocol. Applications will probably be modified in the coming months and years to add specific support for Multipath TCP, but in the mean time, the Multipath TCP developers have created a work around to force legacy applications to use Multipath TCP with the ``mptcpize`` command which is bundled with the `mptcpd <https://intel.github.io/mptcpd/>`_ daemon. We use this approach in this section and discuss applications with native Multipath TCP support `later <native-mptcp-linux>`_.
 
 To illustrate Multipath TCP, we use a very simple setup with a Linux client using Ubuntu 22 and a Linux server using Debian. The client uses Linux kernel version 5.15 while the server uses version 5.17. The server has a single network interface with an IPv4 and an IPv6 address. The client has both a Wi-Fi and an Ethernet interface. These two interfaces are connected to the same router that allocates IP addresses in the same subnet on both interfaces. The client has both an IPv4 and an IPv6 address.
 
@@ -390,3 +392,31 @@ Analyzing the output of ss
 .. include:: nstat-intro.rst
 
 .. include:: nstat-mptcp.rst
+
+
+.. _native-apps-linux:	     
+
+Native Multipath TCP applications on Linux
+------------------------------------------
+
+On recent Linux kernels, Multipath TCP is enabled on a per-socket basis by passing ``IP_PROTO_MPTCP`` as the third parameter of the ``socket`` system call that creates the socket. This implies that existing applications that use TCP need to be changed to support Multipath TCP.
+
+The `mptcp-hello <https://github.com/mptcp-apps/mptcp-hello>`_ project on `GitHub <https://github.com>`_ provides simple examples showing how to enable Multipath TCP on a TCP application in the following programming languages :
+
+ - `C <https://github.com/mptcp-apps/mptcp-hello/blob/main/c/README.md>`_
+ - `Python <https://github.com/mptcp-apps/mptcp-hello/blob/main/python/README.md>`_
+ - `Perl <https://github.com/mptcp-apps/mptcp-hello/blob/main/perl/README.md>`_
+ - `Rust <https://github.com/mptcp-apps/mptcp-hello/blob/main/rust/README.md>`_
+
+Patches have been proposed to add Multipath TCP support to the following applications :
+
+ - `iperf3 <https://github.com/mptcp-apps/iperf>`_
+ - `openssh <https://github.com/mptcp-apps/openssh-portable/tree/mptcp_support>`_
+ - `wrk <https://github.com/mptcp-apps/wrk/tree/mptcp>`_
+ - `curl <https://github.com/mptcp-apps/curl/tree/mptcp-clean>`_
+ - `httping <https://github.com/mptcp-apps/HTTPing/tree/mptcp>`_
+ - `openvpn <https://github.com/mptcp-apps/openvpn/tree/mptcp>`_
+   
+In addition some specific applications are developed with Multipath TCP support :
+
+ - `Minimal Multipath TCP capable FTP client in python <https://github.com/vanyingenzi/mftpclient>`_

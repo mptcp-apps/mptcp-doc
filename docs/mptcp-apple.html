@@ -84,7 +84,7 @@
            <div itemprop="articleBody">
              
   <section id="multipath-tcp-on-apple-devices">
-<h1>Multipath TCP on Apple devices<a class="headerlink" href="#multipath-tcp-on-apple-devices" title="Permalink to this headline"></a></h1>
+<span id="chapter-apple"></span><h1>Multipath TCP on Apple devices<a class="headerlink" href="#multipath-tcp-on-apple-devices" title="Permalink to this headline"></a></h1>
 <p><a class="reference external" href="https://www.apple.com">Apple</a> is among the early adopters of Multipath TCP.
 The first implementation appeared in iOS7 in September 2013. The implementation has been refined later and incorporated in MacOS as well. As of 2022, it is likely that iOS, iPadOS and MacOS use the same Multipath TCP implementations.</p>
 <p>Apple does not publish lots of details about the features of its Multipath TCP implementations, but interested readers can explore the source code of recent OS releases.</p>
@@ -123,6 +123,32 @@ sources of the  <a class="reference external" href="https://github.com/apple-oss
 </section>
 <section id="multipath-tcp-on-macos-ventura">
 <h2>Multipath TCP on MacOS Ventura<a class="headerlink" href="#multipath-tcp-on-macos-ventura" title="Permalink to this headline"></a></h2>
+<p>On MacOS Ventura, the <code class="docutils literal notranslate"><span class="pre">sysctl</span></code> variables are slightly different.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sysctl -a | grep mptcp</span>
+<span class="go">net.inet.tcp.mptcp_version_timeout: 1440</span>
+<span class="go">net.inet.tcp.mptcp_preferred_version: 1</span>
+<span class="go">net.inet.mptcp.enable: 1</span>
+<span class="go">net.inet.mptcp.mptcp_cap_retr: 4</span>
+<span class="go">net.inet.mptcp.dss_csum: 0</span>
+<span class="go">net.inet.mptcp.fail: 1</span>
+<span class="go">net.inet.mptcp.keepalive: 840</span>
+<span class="go">net.inet.mptcp.rtthist_thresh: 600</span>
+<span class="go">net.inet.mptcp.rto_thresh: 1500</span>
+<span class="go">net.inet.mptcp.probeto: 1000</span>
+<span class="go">net.inet.mptcp.probecnt: 5</span>
+<span class="go">net.inet.mptcp.enable_v1: 1</span>
+<span class="go">net.inet.mptcp.reass_qlen: 0</span>
+<span class="go">net.inet.mptcp.pcbcount: 0</span>
+<span class="go">net.inet.mptcp.alternate_port: 0</span>
+<span class="go">net.inet.mptcp.allow_aggregate: 0</span>
+<span class="go">net.inet.mptcp.no_first_party: 0</span>
+<span class="go">net.inet.mptcp.expected_progress_headstart: 5000</span>
+<span class="go">net.inet.mptcp.rto: 3</span>
+<span class="go">net.inet.mptcp.nrto: 3</span>
+<span class="go">net.inet.mptcp.tw: 60</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">net.inet.mptcp.enable_v1</span></code> <code class="docutils literal notranslate"><span class="pre">sysctl</span></code> variable enables the support for Multipath TCP version 1 <span id="id1">[<a class="reference internal" href="biblio.html#id8500" title="A. Ford, C. Raiciu, M. Handley, O. Bonaventure, and C. Paasch. TCP Extensions for Multipath Operation with Multiple Addresses. RFC 8684 (Proposed Standard), March 2020. URL: https://www.rfc-editor.org/rfc/rfc8684.txt, doi:10.17487/RFC8684.">13</a>]</span>. This Multipath TCP implementation supports version 0 defined in <span class="target" id="index-0"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6824.html"><strong>RFC 6824</strong></a> and version 1 defined in <span class="target" id="index-1"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8684.html"><strong>RFC 8684</strong></a>.</p>
 </section>
 <section id="adding-multipath-tcp-support-to-existing-applications">
 <h2>Adding Multipath TCP support to existing applications<a class="headerlink" href="#adding-multipath-tcp-support-to-existing-applications" title="Permalink to this headline"></a></h2>

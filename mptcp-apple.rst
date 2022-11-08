@@ -1,3 +1,5 @@
+.. _chapter-apple:
+
 Multipath TCP on Apple devices
 ==============================
 
@@ -54,6 +56,37 @@ Multipath TCP on MacOS Ventura
 ------------------------------
 
 .. todo: To be provided
+
+On MacOS Ventura, the ``sysctl`` variables are slightly different.
+
+.. code-block:: console
+
+   sysctl -a | grep mptcp
+   net.inet.tcp.mptcp_version_timeout: 1440
+   net.inet.tcp.mptcp_preferred_version: 1
+   net.inet.mptcp.enable: 1
+   net.inet.mptcp.mptcp_cap_retr: 4
+   net.inet.mptcp.dss_csum: 0
+   net.inet.mptcp.fail: 1
+   net.inet.mptcp.keepalive: 840
+   net.inet.mptcp.rtthist_thresh: 600
+   net.inet.mptcp.rto_thresh: 1500
+   net.inet.mptcp.probeto: 1000
+   net.inet.mptcp.probecnt: 5
+   net.inet.mptcp.enable_v1: 1
+   net.inet.mptcp.reass_qlen: 0
+   net.inet.mptcp.pcbcount: 0
+   net.inet.mptcp.alternate_port: 0
+   net.inet.mptcp.allow_aggregate: 0
+   net.inet.mptcp.no_first_party: 0
+   net.inet.mptcp.expected_progress_headstart: 5000
+   net.inet.mptcp.rto: 3
+   net.inet.mptcp.nrto: 3
+   net.inet.mptcp.tw: 60
+
+The ``net.inet.mptcp.enable_v1`` ``sysctl`` variable enables the support for Multipath TCP version 1 :cite:`rfc8684`. This Multipath TCP implementation supports version 0 defined in :rfc:`6824` and version 1 defined in :rfc:`8684`. 
+   
+   
    
 
 Adding Multipath TCP support to existing applications

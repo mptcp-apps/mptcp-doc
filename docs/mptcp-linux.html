@@ -21,7 +21,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Multipath TCP on Apple devices" href="mptcp-apple.html" />
-    <link rel="prev" title="Use cases" href="usecases.html" /> 
+    <link rel="prev" title="Multipath TCP" href="mptcp.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,6 +46,8 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="usecases.html">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcp.html">The Transmission Control Protocol (TCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mptcp.html">Multipath TCP</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Using Multipath TCP on recent Linux kernels</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#enabling-multipath-tcp">Enabling Multipath TCP</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#analyzing-the-output-of-ss">Analyzing the output of ss</a></li>
@@ -62,11 +64,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#the-other-counters">The other counters</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#native-multipath-tcp-applications-on-linux">Native Multipath TCP applications on Linux</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="mptcp-apple.html">Multipath TCP on Apple devices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tcp.html">The Transmission Control Protocol (TCP)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mptcp.html">Multipath TCP</a></li>
 <li class="toctree-l1"><a class="reference internal" href="biblio.html">Bibliography</a></li>
 </ul>
 
@@ -95,10 +96,10 @@
            <div itemprop="articleBody">
              
   <section id="using-multipath-tcp-on-recent-linux-kernels">
-<h1>Using Multipath TCP on recent Linux kernels<a class="headerlink" href="#using-multipath-tcp-on-recent-linux-kernels" title="Permalink to this headline"></a></h1>
-<p>The first version of Multipath TCP on Linux was an off-tree patch intially developed by UCLouvain researchers <span id="id1">[<a class="reference internal" href="biblio.html#id8926" title="Christoph Paasch, Sébastien Barré, and others. Multipath TCP in the Linux kernel. Available from \url http://www.multipath-tcp.org.">12</a>]</span>. This implementation was initially the reference implementation of Multipath TCP. It influenced the design of the protocol as new features were always tested on this implementation.</p>
+<span id="chapter-linux"></span><h1>Using Multipath TCP on recent Linux kernels<a class="headerlink" href="#using-multipath-tcp-on-recent-linux-kernels" title="Permalink to this headline"></a></h1>
+<p>The first version of Multipath TCP on Linux was an off-tree patch intially developed by UCLouvain researchers <span id="id1">[<a class="reference internal" href="biblio.html#id8926" title="Christoph Paasch, Sébastien Barré, and others. Multipath TCP in the Linux kernel. Available from \url http://www.multipath-tcp.org.">40</a>]</span>. This implementation was initially the reference implementation of Multipath TCP. It influenced the design of the protocol as new features were always tested on this implementation. You can find additional information about this implementation on <a class="reference external" href="https://www.multipath-tcp.org">https://www.multipath-tcp.org</a>.</p>
 <p>Starting with version 5.6, the official Linux kernel includes support for Multipath TCP. The set of features supported by this implementation has increased over time as shown by its <a class="reference external" href="https://github.com/multipath-tcp/mptcp_net-next/wiki">ChangeLog</a>.</p>
-<p>To avoid any interference with regular TCP, this implementation only creates a Multipath TCP connection if the application has created its <code class="docutils literal notranslate"><span class="pre">socket</span></code> using the <code class="docutils literal notranslate"><span class="pre">IPPROTO_MPTCP</span></code> protocol. Applications will probably be modified in the coming months and years to add specific support for Multipath TCP, but in the mean time, the Multipath TCP developers have created a work around to force legacy applications to use Multipath TCP with the <code class="docutils literal notranslate"><span class="pre">mptcpize</span></code> command which is bundled with the <a class="reference external" href="https://intel.github.io/mptcpd/">mptcpd</a> daemon. We use this solution in this section.</p>
+<p>To avoid any interference with regular TCP, this implementation only creates a Multipath TCP connection if the application has created its <code class="docutils literal notranslate"><span class="pre">socket</span></code> using the <code class="docutils literal notranslate"><span class="pre">IPPROTO_MPTCP</span></code> protocol. Applications will probably be modified in the coming months and years to add specific support for Multipath TCP, but in the mean time, the Multipath TCP developers have created a work around to force legacy applications to use Multipath TCP with the <code class="docutils literal notranslate"><span class="pre">mptcpize</span></code> command which is bundled with the <a class="reference external" href="https://intel.github.io/mptcpd/">mptcpd</a> daemon. We use this approach in this section and discuss applications with native Multipath TCP support <a class="reference external" href="native-mptcp-linux">later</a>.</p>
 <p>To illustrate Multipath TCP, we use a very simple setup with a Linux client using Ubuntu 22 and a Linux server using Debian. The client uses Linux kernel version 5.15 while the server uses version 5.17. The server has a single network interface with an IPv4 and an IPv6 address. The client has both a Wi-Fi and an Ethernet interface. These two interfaces are connected to the same router that allocates IP addresses in the same subnet on both interfaces. The client has both an IPv4 and an IPv6 address.</p>
 <section id="enabling-multipath-tcp">
 <h2>Enabling Multipath TCP<a class="headerlink" href="#enabling-multipath-tcp" title="Permalink to this headline"></a></h2>
@@ -996,8 +997,8 @@ is not present in this <code class="docutils literal notranslate"><span class="p
 gets incremented.
 If this counter increases, it probably indicates some interference with a
 middlebox that injects acknowledgments during the three-way handshake.</p>
-<div class="literal-block-wrapper docutils container" id="id14">
-<div class="code-block-caption"><span class="caption-number">Listing 1 </span><span class="caption-text">The MPCapable counters (active opens)</span><a class="headerlink" href="#id14" title="Permalink to this code"></a></div>
+<div class="literal-block-wrapper docutils container" id="id15">
+<div class="code-block-caption"><span class="caption-number">Listing 2 </span><span class="caption-text">The MPCapable counters (active opens)</span><a class="headerlink" href="#id15" title="Permalink to this code"></a></div>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                         ||</span>
 <span class="go">                         ||</span>
 <span class="go"> MPTcpExtMPCapableSYNTX+++++++++++++++</span>
@@ -1012,8 +1013,8 @@ middlebox that injects acknowledgments during the three-way handshake.</p>
 </pre></div>
 </div>
 </div>
-<div class="literal-block-wrapper docutils container" id="id15">
-<div class="code-block-caption"><span class="caption-number">Listing 2 </span><span class="caption-text">The MPCapable counters (passive opens)</span><a class="headerlink" href="#id15" title="Permalink to this code"></a></div>
+<div class="literal-block-wrapper docutils container" id="id16">
+<div class="code-block-caption"><span class="caption-number">Listing 3 </span><span class="caption-text">The MPCapable counters (passive opens)</span><a class="headerlink" href="#id16" title="Permalink to this code"></a></div>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                         ||</span>
 <span class="go">                         ||</span>
 <span class="go"> MPTcpExtMPCapableSYNRX+++++++++++++++</span>
@@ -1050,8 +1051,8 @@ that accept subflows, typically servers. The value of the
 If the two other counters, <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinNoTokenFound</span></code> or
 <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinAckHMacFailure</span></code> increase, then the system administrator
 should probably investigate as these are indication of possible attacks.</p>
-<div class="literal-block-wrapper docutils container" id="id16">
-<div class="code-block-caption"><span class="caption-number">Listing 3 </span><span class="caption-text">The Join counters when accepting subflows</span><a class="headerlink" href="#id16" title="Permalink to this code"></a></div>
+<div class="literal-block-wrapper docutils container" id="id17">
+<div class="code-block-caption"><span class="caption-number">Listing 4 </span><span class="caption-text">The Join counters when accepting subflows</span><a class="headerlink" href="#id17" title="Permalink to this code"></a></div>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                         ||</span>
 <span class="go">                         ||</span>
 <span class="go"> MPTcpExtMPJoinSynRX +++++++++++++++</span>
@@ -1079,8 +1080,8 @@ option, a host checks the validity of the received HMAC. If the HMAC is
 invalid, the <code class="docutils literal notranslate"><span class="pre">MPTcpExtMPJoinSynAckHMacFailure</span></code> is incremented. This counter
 should rarely increase. If it increases, then the problem should be
 investigated by collecting packet traces.</p>
-<div class="literal-block-wrapper docutils container" id="id17">
-<div class="code-block-caption"><span class="caption-number">Listing 4 </span><span class="caption-text">The Join counters when initiating subflows</span><a class="headerlink" href="#id17" title="Permalink to this code"></a></div>
+<div class="literal-block-wrapper docutils container" id="id18">
+<div class="code-block-caption"><span class="caption-number">Listing 5 </span><span class="caption-text">The Join counters when initiating subflows</span><a class="headerlink" href="#id18" title="Permalink to this code"></a></div>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">                         ||</span>
 <span class="go">                         ||</span>
 <span class="go"> MPTcpExtMPJoinSynAckRX +++++++++++++++</span>
@@ -1212,13 +1213,43 @@ If this counter increases, you should probably check the memory configuration
 of your host.</p>
 </section>
 </section>
+<section id="native-multipath-tcp-applications-on-linux">
+<span id="native-apps-linux"></span><h2>Native Multipath TCP applications on Linux<a class="headerlink" href="#native-multipath-tcp-applications-on-linux" title="Permalink to this headline"></a></h2>
+<p>On recent Linux kernels, Multipath TCP is enabled on a per-socket basis by passing <code class="docutils literal notranslate"><span class="pre">IP_PROTO_MPTCP</span></code> as the third parameter of the <code class="docutils literal notranslate"><span class="pre">socket</span></code> system call that creates the socket. This implies that existing applications that use TCP need to be changed to support Multipath TCP.</p>
+<p>The <a class="reference external" href="https://github.com/mptcp-apps/mptcp-hello">mptcp-hello</a> project on <a class="reference external" href="https://github.com">GitHub</a> provides simple examples showing how to enable Multipath TCP on a TCP application in the following programming languages :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/mptcp-hello/blob/main/c/README.md">C</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/mptcp-hello/blob/main/python/README.md">Python</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/mptcp-hello/blob/main/perl/README.md">Perl</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/mptcp-hello/blob/main/rust/README.md">Rust</a></p></li>
+</ul>
+</div></blockquote>
+<p>Patches have been proposed to add Multipath TCP support to the following applications :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/iperf">iperf3</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/openssh-portable/tree/mptcp_support">openssh</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/wrk/tree/mptcp">wrk</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/curl/tree/mptcp-clean">curl</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/HTTPing/tree/mptcp">httping</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mptcp-apps/openvpn/tree/mptcp">openvpn</a></p></li>
+</ul>
+</div></blockquote>
+<p>In addition some specific applications are developed with Multipath TCP support :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://github.com/vanyingenzi/mftpclient">Minimal Multipath TCP capable FTP client in python</a></p></li>
+</ul>
+</div></blockquote>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="usecases.html" class="btn btn-neutral float-left" title="Use cases" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mptcp.html" class="btn btn-neutral float-left" title="Multipath TCP" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="mptcp-apple.html" class="btn btn-neutral float-right" title="Multipath TCP on Apple devices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

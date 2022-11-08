@@ -3,39 +3,40 @@
 \contentsline {section}{\numberline {1.1}Improving resilience}{2}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Improving quality of experience}{4}{section.1.2}%
 \contentsline {section}{\numberline {1.3}Improving bandwidth}{4}{section.1.3}%
-\contentsline {chapter}{\numberline {2}Using Multipath TCP on recent Linux kernels}{7}{chapter.2}%
-\contentsline {section}{\numberline {2.1}Enabling Multipath TCP}{7}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Analyzing the output of ss}{15}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Analyzing the output of nstat}{15}{section.2.3}%
-\contentsline {subsection}{\numberline {2.3.1}Using nstat}{16}{subsection.2.3.1}%
-\contentsline {subsection}{\numberline {2.3.2}The Case diagrams}{24}{subsection.2.3.2}%
-\contentsline {section}{\numberline {2.4}The Multipath TCP counters}{25}{section.2.4}%
-\contentsline {subsection}{\numberline {2.4.1}The MPCapable counters}{26}{subsection.2.4.1}%
-\contentsline {subsection}{\numberline {2.4.2}The Join counters}{27}{subsection.2.4.2}%
-\contentsline {subsection}{\numberline {2.4.3}The address advertisement counters}{28}{subsection.2.4.3}%
-\contentsline {subsection}{\numberline {2.4.4}The connection termination counters}{28}{subsection.2.4.4}%
-\contentsline {subsection}{\numberline {2.4.5}The other counters}{29}{subsection.2.4.5}%
-\contentsline {chapter}{\numberline {3}Multipath TCP on Apple devices}{31}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Multipath TCP on MacOS Big Sur}{31}{section.3.1}%
-\contentsline {section}{\numberline {3.2}Multipath TCP on MacOS Ventura}{32}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Adding Multipath TCP support to existing applications}{32}{section.3.3}%
-\contentsline {section}{\numberline {3.4}Multipath TCP enabled applications}{32}{section.3.4}%
-\contentsline {chapter}{\numberline {4}The Transmission Control Protocol (TCP)}{33}{chapter.4}%
-\contentsline {chapter}{\numberline {5}Multipath TCP}{39}{chapter.5}%
-\contentsline {section}{\numberline {5.1}A brief overview of Multipath TCP}{39}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Creating a Multipath TCP connection}{44}{section.5.2}%
-\contentsline {subsection}{\numberline {5.2.1}The Multipath TCP handshake}{48}{subsection.5.2.1}%
-\contentsline {section}{\numberline {5.3}Address and subflow management}{51}{section.5.3}%
-\contentsline {section}{\numberline {5.4}Data transfer}{52}{section.5.4}%
-\contentsline {section}{\numberline {5.5}Congestion control}{57}{section.5.5}%
-\contentsline {subsection}{\numberline {5.5.1}LIA}{57}{subsection.5.5.1}%
-\contentsline {subsection}{\numberline {5.5.2}OLIA}{57}{subsection.5.5.2}%
-\contentsline {subsection}{\numberline {5.5.3}BALIA}{59}{subsection.5.5.3}%
-\contentsline {subsection}{\numberline {5.5.4}MPCC}{59}{subsection.5.5.4}%
-\contentsline {section}{\numberline {5.6}Connection release}{59}{section.5.6}%
-\contentsline {section}{\numberline {5.7}Coping with middlebox interference}{60}{section.5.7}%
-\contentsline {section}{\numberline {5.8}The protocol details}{68}{section.5.8}%
-\contentsline {chapter}{\numberline {6}Bibliography}{71}{chapter.6}%
-\contentsline {chapter}{\numberline {7}Indices and tables}{73}{chapter.7}%
-\contentsline {chapter}{Bibliography}{75}{chapter*.3}%
-\contentsline {chapter}{Index}{79}{section*.4}%
+\contentsline {chapter}{\numberline {2}The Transmission Control Protocol (TCP)}{7}{chapter.2}%
+\contentsline {chapter}{\numberline {3}Multipath TCP}{13}{chapter.3}%
+\contentsline {section}{\numberline {3.1}A brief overview of Multipath TCP}{13}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Creating a Multipath TCP connection}{18}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}The Multipath TCP handshake}{22}{subsection.3.2.1}%
+\contentsline {section}{\numberline {3.3}Address and subflow management}{25}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Data transfer}{26}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Congestion control}{31}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}LIA}{31}{subsection.3.5.1}%
+\contentsline {subsection}{\numberline {3.5.2}OLIA}{31}{subsection.3.5.2}%
+\contentsline {subsection}{\numberline {3.5.3}BALIA}{33}{subsection.3.5.3}%
+\contentsline {subsection}{\numberline {3.5.4}MPCC}{33}{subsection.3.5.4}%
+\contentsline {section}{\numberline {3.6}Connection release}{33}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Coping with middlebox interference}{34}{section.3.7}%
+\contentsline {section}{\numberline {3.8}The protocol details}{42}{section.3.8}%
+\contentsline {chapter}{\numberline {4}Using Multipath TCP on recent Linux kernels}{45}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Enabling Multipath TCP}{45}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Analyzing the output of ss}{53}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Analyzing the output of nstat}{53}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Using nstat}{54}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}The Case diagrams}{62}{subsection.4.3.2}%
+\contentsline {section}{\numberline {4.4}The Multipath TCP counters}{63}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}The MPCapable counters}{64}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}The Join counters}{65}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}The address advertisement counters}{66}{subsection.4.4.3}%
+\contentsline {subsection}{\numberline {4.4.4}The connection termination counters}{66}{subsection.4.4.4}%
+\contentsline {subsection}{\numberline {4.4.5}The other counters}{67}{subsection.4.4.5}%
+\contentsline {section}{\numberline {4.5}Native Multipath TCP applications on Linux}{67}{section.4.5}%
+\contentsline {chapter}{\numberline {5}Multipath TCP on Apple devices}{69}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Multipath TCP on MacOS Big Sur}{69}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Multipath TCP on MacOS Ventura}{70}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Adding Multipath TCP support to existing applications}{71}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Multipath TCP enabled applications}{71}{section.5.4}%
+\contentsline {chapter}{\numberline {6}Bibliography}{73}{chapter.6}%
+\contentsline {chapter}{\numberline {7}Indices and tables}{75}{chapter.7}%
+\contentsline {chapter}{Bibliography}{77}{chapter*.3}%
+\contentsline {chapter}{Index}{81}{section*.4}%
